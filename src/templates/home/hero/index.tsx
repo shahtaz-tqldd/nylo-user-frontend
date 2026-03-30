@@ -41,11 +41,11 @@ const Hero = () => {
             chill — wear what feels like you.
           </p>
 
-          <div className="flex justify-center md:justify-start gap-6 mt-10">
+          <div className="flex justify-center items-center md:justify-start gap-6 mt-10">
             <Link href="/shop">
               <Button>Shop Now</Button>
             </Link>
-            <LinkButton>Explore Collection</LinkButton>
+            <LinkButton className="h-fit">Explore Collection</LinkButton>
           </div>
         </div>
 

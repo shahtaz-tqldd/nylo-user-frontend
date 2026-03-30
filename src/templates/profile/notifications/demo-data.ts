@@ -16,7 +16,7 @@ export const notificationData = [
     {
         id: 3,
         title: "Payment Successful",
-        message: "Your payment for the NYLO Sneakers was successful.",
+        message: "Your payment for the nylo Sneakers was successful.",
         time: "1 day ago",
         read: true,
     },

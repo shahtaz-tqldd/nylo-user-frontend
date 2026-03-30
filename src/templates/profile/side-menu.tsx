@@ -3,8 +3,11 @@
 import Link from "next/link";
 import React from "react";
 import { usePathname } from "next/navigation";
+import { Cart } from "@/assets/algo-icons";
+import { Bell, Heart, ShoppingCart, User } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-const ProfileSideMenu = () => {
+const ProfileSideMenu = ({ className = "" }: { className?: string }) => {
   const pathname = usePathname();
 
   const sideMenu = [
@@ -12,44 +15,48 @@ const ProfileSideMenu = () => {
       id: 1,
       title: "My Orders",
       link: "/my-profile",
+      icon: ShoppingCart,
     },
     {
       id: 2,
       title: "Favourite",
       link: "/my-profile/favourite",
+      icon: Heart,
     },
     {
       id: 3,
       title: "Notification",
       link: "/my-profile/notifications",
+      icon: Bell,
     },
     {
       id: 4,
       title: "Profile Settings",
       link: "/my-profile/settings",
+      icon: User,
     },
   ];
 
   return (
-    <div className="max-w-xs w-full">
-      <div className="space-y-4 flex flex-col mt-6">
-        {sideMenu.map((item) => {
-          const isActive =
-            pathname === item.link
+    <div
+      className={cn("max-w-xs w-full", "space-y-5 flex flex-col", className)}
+    >
+      {sideMenu.map((item) => {
+        const isActive = pathname === item.link;
 
-          return (
-            <Link
-              href={item.link}
-              key={item.id}
-              className={`transition ${
-                isActive ? "font-semibold" : "opacity-60 hover:opacity-100"
-              }`}
-            >
-              {item.title}
-            </Link>
-          );
-        })}
-      </div>
+        return (
+          <Link
+            href={item.link}
+            key={item.id}
+            className={`flx tr gap-3 ${
+              isActive ? "font-semibold text-primary" : "opacity-50 hover:opacity-100"
+            }`}
+          >
+            <item.icon size={16} />
+            {item.title}
+          </Link>
+        );
+      })}
     </div>
   );
 };

@@ -1,0 +1,111 @@
+import { decodeJWT } from "@/lib/jwt-decoder";
+import type { AuthTokens } from "@/features/auth/types";
+
+const isBrowser = typeof window !== "undefined";
+
+export const setAuthCookie = (
+  auth: AuthTokens,
+  name = "nylo",
+  path = "/",
+) => {
+  if (!isBrowser) {
+    return;
+  }
+
+  const { accessToken, refreshToken } = auth;
+
+  try {
+    const { exp } = decodeJWT(accessToken);
+    const millisecondsUntilExpiration = exp ? exp * 1000 - Date.now() : 0;
+
+    // Set secure defaults
+    let cookieFlags = "; SameSite=Strict";
+
+    // Add Secure flag in production
+    if (process.env.NEXT_ENV_MODE === "prod") {
+      cookieFlags += "; Secure";
+    }
+
+    // Set access token with appropriate expiration
+    const accessExpires = new Date(Date.now() + millisecondsUntilExpiration);
+    document.cookie = `${name}_access=${accessToken}; expires=${accessExpires.toUTCString()}; path=${path}${cookieFlags}`;
+
+    if (refreshToken) {
+      // Set refresh token with longer expiration (15 days)
+      const refreshExpires = new Date(Date.now() + 15 * 24 * 60 * 60 * 1000);
+      document.cookie = `${name}_refresh=${refreshToken}; expires=${refreshExpires.toUTCString()}; path=${path}${cookieFlags}`;
+    }
+
+    // Store token expiration time in localStorage for quick validation
+    if (exp) {
+      localStorage.setItem(`${name}_exp`, exp.toString());
+    }
+  } catch (error) {
+    console.error("Failed to set authentication cookies:", error);
+    throw error;
+  }
+};
+
+export const getAuthCookie = (name = "nylo") => {
+  if (!isBrowser) {
+    return {
+      accessToken: null,
+      refreshToken: null,
+      isExpired: false,
+    };
+  }
+
+  const getCookie = (cookieName: string): string | null => {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${cookieName}=`);
+    if (parts.length === 2) {
+      return parts.pop()?.split(";").shift() ?? null;
+    }
+    return null;
+  };
+
+  const accessToken = getCookie(`${name}_access`);
+  const refreshToken = getCookie(`${name}_refresh`);
+  const tokenExp = localStorage.getItem(`${name}_exp`);
+
+  // Quick expiration check without decoding token
+  const isExpired = tokenExp && parseInt(tokenExp) * 1000 < Date.now();
+
+  return {
+    accessToken: isExpired ? null : accessToken,
+    refreshToken,
+    isExpired,
+  };
+};
+
+export const removeAuthCookie = (name = "nylo", path = "/") => {
+  if (!isBrowser) {
+    return;
+  }
+
+  const cookieFlags = process.env.NEXT_ENV_MODE === "prod"
+    ? "; Secure; SameSite=Strict"
+    : "; SameSite=Strict";
+
+  // Remove cookies by setting immediate expiration
+  document.cookie = `${name}_access=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=${path}${cookieFlags}`;
+  document.cookie = `${name}_refresh=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=${path}${cookieFlags}`;
+
+  // Clear localStorage
+  localStorage.removeItem(`${name}_exp`);
+};
+
+// New function to check if user is authenticated
+export const isAuthenticated = (name = "nylo") => {
+  const { accessToken, refreshToken, isExpired } = getAuthCookie(name);
+
+  if (!accessToken && !refreshToken) {
+    return false;
+  }
+
+  if (isExpired && !refreshToken) {
+    return false;
+  }
+
+  return true;
+};

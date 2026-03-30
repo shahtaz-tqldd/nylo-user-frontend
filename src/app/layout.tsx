@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
-
 import { Space_Grotesk } from "next/font/google";
-
 import "@/assets/styles/global.css";
 import "@/assets/styles/layout.css";
+import AppProviders from "./providers";
 
 const font = Space_Grotesk({
   subsets: ["latin"],
@@ -24,10 +23,10 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <link rel="icon" href="/logo.svg" type="image/svg+xml" />
+        <link rel="icon" href="/nylo.png" type="image/svg+xml" />
       </head>
       <body className={font.className} cz-shortcut-listen="false">
-        {children}
+        <AppProviders>{children}</AppProviders>
       </body>
     </html>
   );

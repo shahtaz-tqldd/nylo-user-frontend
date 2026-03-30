@@ -10,11 +10,13 @@ import { NAV_LINKS } from "./data";
 import { useRouter } from "next/navigation";
 import CartDrawer from "./cart-drawer";
 import AuthDialog from "./auth-dialog";
+import { useAppSelector } from "@/hooks/redux";
 
 const Header = () => {
   const router = useRouter();
   const [cartOpen, setCartOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const { isAuthenticated } = useAppSelector((state) => state.auth);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -26,8 +28,6 @@ const Header = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const isLoggedIn = true;
-
   return (
     <header
       className={`w-full fixed top-0 z-50 transition-all border-b  duration-300 ${
@@ -38,15 +38,15 @@ const Header = () => {
     >
       <div className="container mx-auto px-6 py-2 flex items-center justify-between">
         {/* Logo */}
-        <Link href="/" className="flx">
+        <Link href="/" className="flx gap-1">
+          <span className="text-3xl font-black text-primary">nyLo</span>
           <Image
-            src="/logo.svg"
+            src="/logo.png"
             height={200}
             width={200}
-            className="h-14 w-14 -rotate-30 -ml-4"
+            className="h-10 w-10 object-contain"
             alt="logo"
           />
-          <span className="text-3xl font-semibold text-emerald-900">nylo</span>
         </Link>
 
         {/* Navigation */}
@@ -65,7 +65,7 @@ const Header = () => {
 
           <div className="flx">
             <IconButton icon={Cart} onClick={() => setCartOpen(true)} />
-            {isLoggedIn ? (
+            {!isAuthenticated ? (
               <AuthDialog />
             ) : (
               <IconButton

@@ -267,7 +267,7 @@ export default function DataTable<T extends object>({
                           : String(
                               col.accessor
                                 ? col.accessor(row)
-                                : (row[col.key] as any)
+                                : (row[col.key] as any),
                             )}
                       </TableCell>
                     ))}
@@ -275,10 +275,8 @@ export default function DataTable<T extends object>({
                     {isShowActions ? (
                       <TableCell className="w-12 px-4 text-center">
                         <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="rubix" size="sm" className="p-1">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
+                          <DropdownMenuTrigger asChild className="w-fit cursor-pointer h-7 w-7 hover:bg-gray-100 tr rounded-full p-1.5 mx-auto">
+                            <MoreHorizontal />
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             {/* Example default actions; consumer can ignore and render their own via renderRowActions */}

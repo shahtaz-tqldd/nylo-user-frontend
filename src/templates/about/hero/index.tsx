@@ -12,8 +12,8 @@ const AboutHero = () => {
           for its history and potential.
         </p>
         <div className="pl-10 py-10 w-1/3 absolute bg-white z-20 bottom-0 left-0">
-          <h5 className="font-semibold text-primary text-8xl">about</h5>
-          <h5 className="font-semibold text-primary text-8xl ml-32">nylo</h5>
+          <h5 className="font-bold text-primary text-7xl">About</h5>
+          <h5 className="font-bold text-primary text-7xl ml-32 mt-6">nyLo</h5>
         </div>
       </div>
       <div className="w-3/4 h-[600px] relative">
