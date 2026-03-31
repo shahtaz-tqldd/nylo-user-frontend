@@ -7,8 +7,8 @@ interface LayoutProps {
 
 const MyProfileLayout: React.FC<LayoutProps> = ({ children }) => {
   return (
-    <div className="pt-24 pb-12 flex container gap-12">
-      <ProfileSideMenu className="sticky top-24 h-fit" />
+    <div className="pt-24 pb-12 flex container gap-8">
+      <ProfileSideMenu className="sticky top-24 h-fit mt-6" />
       <div className="flex-1 w-full min-h-[60vh]">{children}</div>
     </div>
   );

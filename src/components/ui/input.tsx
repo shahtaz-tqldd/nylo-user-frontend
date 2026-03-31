@@ -72,6 +72,7 @@ type FloatingInputProps = {
   onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void;
   name: string;
   autoComplete?: string;
+  className?: string;
 };
 
 function FloatingInput({
@@ -83,6 +84,7 @@ function FloatingInput({
   onBlur,
   name,
   autoComplete = "off",
+  className = "",
 }: FloatingInputProps) {
   const [showPassword, setShowPassword] = React.useState(false);
 
@@ -90,7 +92,7 @@ function FloatingInput({
   const inputType = isPassword ? (showPassword ? "text" : "password") : type;
 
   return (
-    <div className="w-full">
+    <div className={`w-full ${className}`}>
       <div className="relative">
         <input
           id={name}

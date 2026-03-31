@@ -39,7 +39,7 @@ const ProfileSideMenu = ({ className = "" }: { className?: string }) => {
 
   return (
     <div
-      className={cn("max-w-xs w-full", "space-y-5 flex flex-col", className)}
+      className={cn("max-w-[220px] w-full", "space-y-5 flex flex-col", className)}
     >
       {sideMenu.map((item) => {
         const isActive = pathname === item.link;

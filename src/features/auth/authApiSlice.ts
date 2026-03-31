@@ -42,10 +42,7 @@ export const authApiSlice = apiSlice.injectEndpoints({
       },
     }),
 
-    resetPassword: builder.mutation<
-      ApiResponse<unknown>,
-      { bodyData: unknown; userId: string; token: string }
-    >({
+    resetPassword: builder.mutation<ApiResponse<unknown>, { bodyData: unknown; userId: string; token: string }>({
       query: (payload) => {
         const { bodyData, userId, token } = payload;
         return {
@@ -84,17 +81,15 @@ export const authApiSlice = apiSlice.injectEndpoints({
       },
     }),
 
-    userList: builder.query<
-      ApiResponse<AuthUser[]>,
-      { page: number; page_size: number; search_str?: string }
-    >({
-      query: ({ page, page_size, search_str }) => {
+    updateProfile: builder.mutation<ApiResponse<unknown>, unknown>({
+      query: (payload) => {
         return {
-          url: `/auth/list?page=${page}&page_size=${page_size}&search_str=${search_str || ""
-            }`,
-          method: "GET",
+          url: `/auth/me/update/`,
+          method: "PATCH",
+          body: payload,
         };
       },
+      invalidatesTags: ["my-profile"],
     }),
   }),
 });
@@ -106,5 +101,5 @@ export const {
   useResetPasswordMutation,
   useMeQuery,
   useChangePasswordMutation,
-  useUserListQuery,
+  useUpdateProfileMutation
 } = authApiSlice;
