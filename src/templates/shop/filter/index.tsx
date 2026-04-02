@@ -2,13 +2,25 @@ import React, { useState, useCallback, useMemo } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RangeSlider } from "@/components/ui/slider";
 import Button from "@/components/buttons/primary-button";
-import { FilterProps, FilterState } from "../types";
+import { FilterState } from "../types";
 import { DEMO_COLORS, DEMO_SIZES } from "@/templates/product-details/demo-data";
+import { ProductSettings } from "@/features/products/types";
 
 const sizes = DEMO_SIZES;
 const colors = DEMO_COLORS;
 
+export interface FilterProps {
+  settings: ProductSettings;
+  onFiltersChange?: (filters: FilterState) => void;
+  onApplyFilters?: (filters: FilterState) => void;
+  initialFilters?: Partial<FilterState>;
+  filters: FilterState;
+  setFilters: (filters: FilterState) => void;
+  defaultFilters: FilterState;
+}
+
 const Filter: React.FC<FilterProps> = ({
+  settings,
   onFiltersChange,
   onApplyFilters,
   filters,
@@ -16,6 +28,7 @@ const Filter: React.FC<FilterProps> = ({
   defaultFilters,
   initialFilters,
 }) => {
+  console.log(settings);
   // Track if filters have been modified from initial state
   const [hasUnappliedChanges, setHasUnappliedChanges] = useState(false);
   const [lastAppliedFilters, setLastAppliedFilters] = useState<FilterState>({
@@ -46,7 +59,7 @@ const Filter: React.FC<FilterProps> = ({
       setHasUnappliedChanges(true);
       onFiltersChange?.(newFilters);
     },
-    [onFiltersChange, setFilters]
+    [onFiltersChange, setFilters],
   );
 
   // Handle category checkbox changes
@@ -58,7 +71,7 @@ const Filter: React.FC<FilterProps> = ({
 
       updateFilters({ ...filters, categories: newCategories });
     },
-    [filters, updateFilters]
+    [filters, updateFilters],
   );
 
   // Handle price range changes
@@ -66,7 +79,7 @@ const Filter: React.FC<FilterProps> = ({
     (minVal: number, maxVal: number) => {
       updateFilters({ ...filters, priceRange: [minVal, maxVal] });
     },
-    [filters, updateFilters]
+    [filters, updateFilters],
   );
 
   // Handle size selection
@@ -78,7 +91,7 @@ const Filter: React.FC<FilterProps> = ({
 
       updateFilters({ ...filters, sizes: newSizes });
     },
-    [filters, updateFilters]
+    [filters, updateFilters],
   );
 
   // Handle color selection
@@ -90,7 +103,7 @@ const Filter: React.FC<FilterProps> = ({
 
       updateFilters({ ...filters, colors: newColors });
     },
-    [filters, updateFilters]
+    [filters, updateFilters],
   );
 
   // Apply filters
@@ -119,25 +132,25 @@ const Filter: React.FC<FilterProps> = ({
           )}
         </div>
         <div className="space-y-3">
-          {["Men", "Women", "Kids"].map((category) => (
+          {settings?.genders?.map((gender) => (
             <label
-              key={category}
-              htmlFor={category}
+              key={gender.value}
+              htmlFor={gender.value}
               className="flex items-center gap-3 cursor-pointer text-sm hover:text-gray-900 transition-colors"
             >
               <Checkbox
-                id={category}
-                checked={filters.categories.includes(category)}
+                id={gender.value}
+                checked={filters.categories.includes(gender.value)}
                 onCheckedChange={(checked) =>
-                  handleCategoryChange(category, !!checked)
+                  handleCategoryChange(gender.value, !!checked)
                 }
               />
               <span
                 className={
-                  filters.categories.includes(category) ? "font-medium" : ""
+                  filters.categories.includes(gender.value) ? "font-medium" : ""
                 }
               >
-                {category}
+                {gender.label}
               </span>
             </label>
           ))}
@@ -166,17 +179,17 @@ const Filter: React.FC<FilterProps> = ({
       <div>
         <h4 className="mb-3 font-medium text-gray-900">Size</h4>
         <div className="flex flex-wrap gap-2">
-          {sizes.map((size) => (
+          {settings?.sizes?.map((size) => (
             <button
-              key={size}
-              onClick={() => handleSizeToggle(size)}
+              key={size.id}
+              onClick={() => handleSizeToggle(size.id)}
               className={`h-9 w-9 rounded-full text-sm font-medium tr ${
-                filters.sizes.includes(size)
+                filters.sizes.includes(size.id)
                   ? "bg-primary text-white shadow-md"
                   : "text-gray-700 bg-gray-100 hover:bg-gray-200"
               }`}
             >
-              {size}
+              {size?.name}
             </button>
           ))}
         </div>
@@ -191,7 +204,7 @@ const Filter: React.FC<FilterProps> = ({
       <div>
         <h4 className="mb-3 font-medium text-gray-900">Color</h4>
         <div className="flex flex-wrap gap-2">
-          {colors.map((color) => (
+          {settings?.colors?.map((color) => (
             <button
               key={color.name}
               onClick={() => handleColorToggle(color.name)}
@@ -205,7 +218,7 @@ const Filter: React.FC<FilterProps> = ({
               <span
                 className="h-2.5 w-2.5 rounded-full"
                 style={{
-                  backgroundColor: color.value,
+                  backgroundColor: color?.color_code,
                 }}
               ></span>
               <span className="text-sm">{color.name}</span>

@@ -5,6 +5,10 @@ import Filter from "./filter";
 import Header from "./header";
 import Display from "./display";
 import { FilterState } from "./types";
+import {
+  useProductListQuery,
+  useProductSettingsQuery,
+} from "@/features/products/productApiSlice";
 
 const defaultFilters: FilterState = {
   categories: [],
@@ -80,10 +84,14 @@ const ShopPage = () => {
     // Apply category filter immediately
   }, []);
 
+  const { data, isLoading } = useProductListQuery();
+  const { data: settings } = useProductSettingsQuery();
+
   return (
     <main className="flex gap-12 container pt-28 pb-20">
       <aside className="max-w-[300px] w-full md:block hidden sticky top-24 h-fit">
         <Filter
+          settings={settings?.data || []}
           filters={filters}
           setFilters={setFilters}
           defaultFilters={defaultFilters}
@@ -102,9 +110,11 @@ const ShopPage = () => {
           onCategorySelect={handleCategorySelect}
         />
         <Display
+          products={data?.data || []}
           filters={appliedFilters}
           searchQuery={searchQuery}
           selectedCategory={selectedCategory}
+          isLoading={isLoading}
         />
       </section>
     </main>

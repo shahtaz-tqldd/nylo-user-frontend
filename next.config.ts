@@ -22,6 +22,7 @@ const nextConfig: NextConfig = {
       "www.gngmodels.com",
       "images.unsplash.com",
       "plus.unsplash.com",
+      "res.cloudinary.com"
     ],
   },
 };
