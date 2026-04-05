@@ -1,5 +1,5 @@
 export interface FilterState {
-  categories: string[];
+  genders: string[];
   priceRange: [number, number];
   sizes: string[];
   colors: string[];

@@ -3,11 +3,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { RangeSlider } from "@/components/ui/slider";
 import Button from "@/components/buttons/primary-button";
 import { FilterState } from "../types";
-import { DEMO_COLORS, DEMO_SIZES } from "@/templates/product-details/demo-data";
 import { ProductSettings } from "@/features/products/types";
-
-const sizes = DEMO_SIZES;
-const colors = DEMO_COLORS;
 
 export interface FilterProps {
   settings: ProductSettings;
@@ -28,8 +24,6 @@ const Filter: React.FC<FilterProps> = ({
   defaultFilters,
   initialFilters,
 }) => {
-  console.log(settings);
-  // Track if filters have been modified from initial state
   const [hasUnappliedChanges, setHasUnappliedChanges] = useState(false);
   const [lastAppliedFilters, setLastAppliedFilters] = useState<FilterState>({
     ...defaultFilters,
@@ -39,7 +33,7 @@ const Filter: React.FC<FilterProps> = ({
   // Check if current filters are different from default
   const hasActiveFilters = useMemo(() => {
     return (
-      filters.categories.length > 0 ||
+      filters.genders.length > 0 ||
       filters.sizes.length > 0 ||
       filters.colors.length > 0 ||
       filters.priceRange[0] !== defaultFilters.priceRange[0] ||
@@ -64,12 +58,12 @@ const Filter: React.FC<FilterProps> = ({
 
   // Handle category checkbox changes
   const handleCategoryChange = useCallback(
-    (category: string, checked: boolean) => {
-      const newCategories = checked
-        ? [...filters.categories, category]
-        : filters.categories.filter((c) => c !== category);
+    (gender: string, checked: boolean) => {
+      const newGenders = checked
+        ? [...filters.genders, gender]
+        : filters.genders.filter((item) => item !== gender);
 
-      updateFilters({ ...filters, categories: newCategories });
+      updateFilters({ ...filters, genders: newGenders });
     },
     [filters, updateFilters],
   );
@@ -84,10 +78,10 @@ const Filter: React.FC<FilterProps> = ({
 
   // Handle size selection
   const handleSizeToggle = useCallback(
-    (size: string) => {
-      const newSizes = filters.sizes.includes(size)
-        ? filters.sizes.filter((s) => s !== size)
-        : [...filters.sizes, size];
+    (sizeId: string) => {
+      const newSizes = filters.sizes.includes(sizeId)
+        ? filters.sizes.filter((size) => size !== sizeId)
+        : [...filters.sizes, sizeId];
 
       updateFilters({ ...filters, sizes: newSizes });
     },
@@ -96,10 +90,10 @@ const Filter: React.FC<FilterProps> = ({
 
   // Handle color selection
   const handleColorToggle = useCallback(
-    (colorName: string) => {
-      const newColors = filters.colors.includes(colorName)
-        ? filters.colors.filter((c) => c !== colorName)
-        : [...filters.colors, colorName];
+    (colorId: string) => {
+      const newColors = filters.colors.includes(colorId)
+        ? filters.colors.filter((color) => color !== colorId)
+        : [...filters.colors, colorId];
 
       updateFilters({ ...filters, colors: newColors });
     },
@@ -113,12 +107,23 @@ const Filter: React.FC<FilterProps> = ({
     onApplyFilters?.(filters);
   }, [filters, onApplyFilters]);
 
+  const selectedSizeLabels = useMemo(() => {
+    return settings?.sizes
+      ?.filter((size) => filters.sizes.includes(size.id))
+      .map((size) => size.name) ?? [];
+  }, [filters.sizes, settings?.sizes]);
+
+  const selectedColorLabels = useMemo(() => {
+    return settings?.colors
+      ?.filter((color) => filters.colors.includes(color.id))
+      .map((color) => color.name) ?? [];
+  }, [filters.colors, settings?.colors]);
+
   return (
     <div className="space-y-8">
-      {/* Category */}
       <div>
         <div className="flbx">
-          <h4 className="mb-3">Category</h4>
+          <h4 className="mb-3">Gender</h4>
           {hasUnappliedChanges && (
             <Button
               size="xs"
@@ -140,14 +145,14 @@ const Filter: React.FC<FilterProps> = ({
             >
               <Checkbox
                 id={gender.value}
-                checked={filters.categories.includes(gender.value)}
+                checked={filters.genders.includes(gender.value)}
                 onCheckedChange={(checked) =>
                   handleCategoryChange(gender.value, !!checked)
                 }
               />
               <span
                 className={
-                  filters.categories.includes(gender.value) ? "font-medium" : ""
+                  filters.genders.includes(gender.value) ? "font-medium" : ""
                 }
               >
                 {gender.label}
@@ -157,12 +162,11 @@ const Filter: React.FC<FilterProps> = ({
         </div>
       </div>
 
-      {/* Price Range */}
       <div>
         <h4 className="mb-3 font-medium text-gray-900">Price Range</h4>
         <RangeSlider
           min={0}
-          max={100}
+          max={1000}
           minVal={filters.priceRange[0]}
           maxVal={filters.priceRange[1]}
           onChange={handlePriceRangeChange}
@@ -175,7 +179,6 @@ const Filter: React.FC<FilterProps> = ({
         </div>
       </div>
 
-      {/* Size */}
       <div>
         <h4 className="mb-3 font-medium text-gray-900">Size</h4>
         <div className="flex flex-wrap gap-2">
@@ -195,22 +198,21 @@ const Filter: React.FC<FilterProps> = ({
         </div>
         {filters.sizes.length > 0 && (
           <div className="text-sm text-gray-600 font-medium mt-4">
-            Selected: {filters.sizes.join(", ")}
+            Selected: {selectedSizeLabels.join(", ")}
           </div>
         )}
       </div>
 
-      {/* Color */}
       <div>
         <h4 className="mb-3 font-medium text-gray-900">Color</h4>
         <div className="flex flex-wrap gap-2">
           {settings?.colors?.map((color) => (
             <button
-              key={color.name}
-              onClick={() => handleColorToggle(color.name)}
+              key={color.id}
+              onClick={() => handleColorToggle(color.id)}
               title={color.name}
               className={`flx gap-2 py-1 pl-2 pr-2.5 rounded-lg ${
-                filters.colors.includes(color?.name)
+                filters.colors.includes(color.id)
                   ? "bg-primary/15 text-primary"
                   : "bg-gray-100 hover:bg-gray-200 tr"
               }`}
@@ -227,7 +229,7 @@ const Filter: React.FC<FilterProps> = ({
         </div>
         {filters.colors.length > 0 && (
           <div className="text-sm text-gray-600 font-medium mt-4">
-            Selected: {filters.colors.join(", ")}
+            Selected: {selectedColorLabels.join(", ")}
           </div>
         )}
       </div>
