@@ -15,7 +15,7 @@ const NewArrivals = () => {
       <div className="container mx-auto px-6">
         <Title>New Arrivals</Title>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-6 mt-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 mt-12">
           {data?.data?.map((product, index) => (
             <ProductCrad product={product} key={index} size="sm" isLanding />
           ))}

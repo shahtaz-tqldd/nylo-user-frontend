@@ -2,6 +2,7 @@ export interface Product {
   id?: string | number;
   title?: string;
   name?: string;
+  description?: string;
   slug?: string;
   image_url?: string | null;
   image?: string | { src: string };
@@ -13,7 +14,14 @@ export interface Product {
   brand?: string;
   gender?: string;
   in_stock?: boolean;
+  total_stock?: number;
   variants_count?: number;
+  sku?: string;
+  features?: string[];
+  specifications?: Record<string, string>;
+  tags?: string[];
+  category?: ProductCategory;
+  variants?: ProductVariant[];
 }
 
 export interface ProductCategory {
@@ -31,6 +39,25 @@ export interface ProductColor {
   id: string;
   name: string;
   color_code: string;
+}
+
+export interface ProductVariantSize {
+  id: string;
+  name: string;
+  order: number;
+}
+
+export interface ProductVariant {
+  id: string;
+  size: ProductVariantSize;
+  color: ProductColor;
+  stock: number;
+  image_url: string | null;
+  sku: string;
+  slug: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface ProductGender {

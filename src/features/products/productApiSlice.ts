@@ -54,10 +54,20 @@ export const productApiSlice = apiSlice.injectEndpoints({
         };
       },
     }),
+
+    productDetails: builder.query<ApiResponse<Product>, string>({
+      query: (productSlug) => {
+        return {
+          url: `/products/${productSlug}/`,
+          method: "GET",
+        };
+      },
+    }),
   }),
 });
 
 export const {
   useProductListQuery,
   useProductSettingsQuery,
+  useProductDetailsQuery
 } = productApiSlice;

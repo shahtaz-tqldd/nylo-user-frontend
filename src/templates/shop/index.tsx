@@ -222,7 +222,7 @@ const ShopPage = () => {
           onCategorySelect={handleCategorySelect}
           onRemoveFilter={handleRemoveFilter}
         />
-        <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-x-5 gap-y-10">
+        <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-10">
           {isInitialLoading
             ? Array.from({ length: 8 }).map((_, index) => (
                 <ProductCardSkeleton key={index} size="sm" />
