@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   ShoppingCart,
   Lock,
@@ -13,7 +14,7 @@ import {
   CheckCircle,
 } from "lucide-react";
 import Button from "@/components/buttons/primary-button";
-import { Input } from "@/components/ui/input";
+import { FloatingInput, Input } from "@/components/ui/input";
 import {
   CityIcon,
   EmailIcon,
@@ -23,16 +24,8 @@ import {
   WorldIcon,
 } from "@/assets/algo-icons";
 import Title from "@/components/ui/title";
-
-interface CartItem {
-  id: string;
-  name: string;
-  price: number;
-  quantity: number;
-  image: string;
-  color?: { name: string; value: string };
-  size?: string;
-}
+import { useCartItemListQuery } from "@/features/products/productApiSlice";
+import { useAppSelector } from "@/hooks/redux";
 
 interface ShippingInfo {
   firstName: string;
@@ -46,6 +39,11 @@ interface ShippingInfo {
 }
 
 const CheckoutPage: React.FC = () => {
+  const router = useRouter();
+  const { isAuthenticated } = useAppSelector((state) => state.auth);
+  const { data, isLoading, isFetching } = useCartItemListQuery(undefined, {
+    skip: !isAuthenticated,
+  });
   const [currentStep, setCurrentStep] = useState(1);
   const [shippingInfo, setShippingInfo] = useState<ShippingInfo>({
     firstName: "",
@@ -61,24 +59,15 @@ const CheckoutPage: React.FC = () => {
   const [promoCode, setPromoCode] = useState("");
   const [promoApplied, setPromoApplied] = useState(false);
 
-  // Mock cart data
-  const cartItems: CartItem[] = [
-    {
-      id: "1",
-      name: "Nike ZoomX Velocity Running Shoes",
-      price: 299.99,
-      quantity: 1,
-      image:
-        "https://img.kwcdn.com/product/fancy/49bd82d7-2205-44a1-bde4-b5d5eb2b1b8d.jpg",
-
-      color: { value: "#0eb56aff", name: "Forest Green" },
-      size: "42",
-    },
-  ];
+  const cartItems = data?.data ?? [];
+  const cartCount = cartItems.reduce(
+    (sum, item) => sum + (item.quantity ?? 0),
+    0,
+  );
 
   const subtotal = cartItems.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
+    (sum, item) => sum + Number(item.total_price ?? 0),
+    0,
   );
   const shipping = 15.99;
   const discount = promoApplied ? subtotal * 0.1 : 0;
@@ -99,6 +88,12 @@ const CheckoutPage: React.FC = () => {
     if (step === 2) return currentStep > 2;
     return false;
   };
+
+  const formatPrice = (value?: string | number) =>
+    `$${Number(value ?? 0).toFixed(2)}`;
+
+  const isCheckoutBlocked =
+    !isAuthenticated || (!isLoading && !isFetching && !cartItems.length);
 
   return (
     <div className="container pt-32 pb-20">
@@ -134,8 +129,8 @@ const CheckoutPage: React.FC = () => {
                     {step === 1
                       ? "Shipping"
                       : step === 2
-                      ? "Payment"
-                      : "Review"}
+                        ? "Payment"
+                        : "Review"}
                   </span>
                   {step < 3 && (
                     <div
@@ -163,7 +158,7 @@ const CheckoutPage: React.FC = () => {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
+                    {/* <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         First Name
                       </label>
@@ -174,8 +169,16 @@ const CheckoutPage: React.FC = () => {
                         onChange={(e) =>
                           handleInputChange("firstName", e.target.value)
                         }
-                      />
-                    </div>
+                        />
+                        </div> */}
+                    <FloatingInput
+                      label="First Name"
+                      name="firstName"
+                      value={shippingInfo.firstName}
+                      onChange={(e) =>
+                        handleInputChange("firstName", e.target.value)
+                      }
+                    />
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Last Name
@@ -275,11 +278,18 @@ const CheckoutPage: React.FC = () => {
                     </div>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-16">
-                    <Button size="lg" variant="accent">
+                    <Button
+                      size="lg"
+                      variant="accent"
+                      onClick={() => router.push("/")}
+                    >
                       Go Back to Cart
                     </Button>
 
-                    <Button onClick={() => setCurrentStep(2)}>
+                    <Button
+                      onClick={() => setCurrentStep(2)}
+                      disabled={isCheckoutBlocked}
+                    >
                       Continue to Payment
                     </Button>
                   </div>
@@ -358,7 +368,11 @@ const CheckoutPage: React.FC = () => {
                     >
                       Back
                     </Button>
-                    <Button size="lg" onClick={() => setCurrentStep(3)}>
+                    <Button
+                      size="lg"
+                      onClick={() => setCurrentStep(3)}
+                      disabled={isCheckoutBlocked}
+                    >
                       Review Order
                     </Button>
                   </div>
@@ -407,7 +421,11 @@ const CheckoutPage: React.FC = () => {
                     >
                       Back
                     </Button>
-                    <Button size="lg" isArrow={false}>
+                    <Button
+                      size="lg"
+                      isArrow={false}
+                      disabled={isCheckoutBlocked}
+                    >
                       <div className="flx gap-3">
                         <Lock className="w-4 h-4" />
                         <span>Complete Order</span>
@@ -424,44 +442,67 @@ const CheckoutPage: React.FC = () => {
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sticky top-8">
               <div className="flex items-center space-x-3 mb-6">
                 <ShoppingCart className="w-6 h-6 text-primary" />
-                <h4>Order Summary</h4>
+                <h4>Order Summary {cartCount ? `(${cartCount})` : ""}</h4>
               </div>
 
               {/* Cart Items */}
               <div className="space-y-4 mb-6">
-                {cartItems.map((item) => (
-                  <div key={item.id} className="flex items-center space-x-4">
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                      className="w-16 h-16 object-cover rounded-lg"
-                    />
-                    <div className="flex-1 min-w-0 space-y-1">
-                      <h5 className="font-medium truncate">{item.name}</h5>
-                      <p className="text-sm">Quantity: {item.quantity}</p>
-                      <div className="flx gap-4">
-                        {item.size && (
-                          <p className="text-sm text-gray-500">
-                            Size: {item.size}
-                          </p>
-                        )}
-                        {item.color && (
-                          <p className="text-sm text-gray-500 flx gap-2">
-                            Color:{" "}
-                            <div
-                              style={{ backgroundColor: item.color?.value }}
-                              className="h-2.5 w-2.5 rounded-full"
-                            />
-                            <span>{item.color.name}</span>
-                          </p>
-                        )}
+                {!isAuthenticated ? (
+                  <p className="text-sm text-gray-500">
+                    Sign in to continue with checkout.
+                  </p>
+                ) : isLoading || isFetching ? (
+                  <p className="text-sm text-gray-500">Loading cart items...</p>
+                ) : !cartItems.length ? (
+                  <p className="text-sm text-gray-500">
+                    Your cart is empty. Add an item before checkout.
+                  </p>
+                ) : (
+                  cartItems.map((item) => (
+                    <div key={item.id} className="flex items-center space-x-4">
+                      <img
+                        src={
+                          item.variant?.image_url ??
+                          item.product?.image_url ??
+                          "https://placehold.co/200x200?text=Product"
+                        }
+                        alt={item.product?.title ?? "Cart item"}
+                        className="w-16 h-16 object-cover rounded-lg"
+                      />
+                      <div className="flex-1 min-w-0 space-y-1">
+                        <h5 className="font-medium truncate">
+                          {item.product?.title ?? "Product"}
+                        </h5>
+                        <p className="text-sm">
+                          Quantity: {item.quantity ?? 0}
+                        </p>
+                        <div className="flx gap-4">
+                          {item.variant?.size?.name ? (
+                            <p className="text-sm text-gray-500">
+                              Size: {item.variant.size.name}
+                            </p>
+                          ) : null}
+                          {item.variant?.color ? (
+                            <p className="text-sm text-gray-500 flx gap-2">
+                              Color:
+                              <span
+                                style={{
+                                  backgroundColor:
+                                    item.variant.color.color_code,
+                                }}
+                                className="h-2.5 w-2.5 rounded-full"
+                              />
+                              <span>{item.variant.color.name}</span>
+                            </p>
+                          ) : null}
+                        </div>
                       </div>
+                      <p className="text-sm font-medium text-gray-900">
+                        {formatPrice(item.total_price ?? item.unit_price)}
+                      </p>
                     </div>
-                    <p className="text-sm font-medium text-gray-900">
-                      ${item.price}
-                    </p>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
 
               {/* Promo Code */}
@@ -495,23 +536,23 @@ const CheckoutPage: React.FC = () => {
               <div className="border-t border-gray-200 pt-4 space-y-3">
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Subtotal</span>
-                  <span className="text-gray-900">${subtotal.toFixed(2)}</span>
+                  <span className="text-gray-900">{formatPrice(subtotal)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Shipping</span>
-                  <span className="text-gray-900">${shipping.toFixed(2)}</span>
+                  <span className="text-gray-900">{formatPrice(shipping)}</span>
                 </div>
                 {promoApplied && (
                   <div className="flex justify-between text-sm">
                     <span className="text-green-600">Discount (10%)</span>
                     <span className="text-green-600">
-                      -${discount.toFixed(2)}
+                      -{formatPrice(discount)}
                     </span>
                   </div>
                 )}
                 <div className="border-t border-gray-200 pt-3 flex justify-between font-semibold text-lg">
                   <span className="text-gray-900">Total</span>
-                  <span className="text-gray-900">${total.toFixed(2)}</span>
+                  <span className="text-gray-900">{formatPrice(total)}</span>
                 </div>
               </div>
 

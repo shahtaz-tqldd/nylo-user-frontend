@@ -64,7 +64,8 @@ const Header = () => {
           </nav>
 
           <div className="flx">
-            <IconButton icon={Cart} onClick={() => setCartOpen(true)} />
+            <CartDrawer />
+
             {!isAuthenticated ? (
               <AuthDialog />
             ) : (
@@ -77,7 +78,6 @@ const Header = () => {
           </div>
         </div>
       </div>
-      <CartDrawer open={cartOpen} setOpen={setCartOpen} />
     </header>
   );
 };

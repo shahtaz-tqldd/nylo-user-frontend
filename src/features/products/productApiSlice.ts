@@ -4,6 +4,10 @@ import type {
   Product,
   ProductListQueryParams,
   ProductSettings,
+  AddToCartPayload,
+  AddToFavouritePayload,
+  CartItem,
+  FavouriteItem,
 } from "./types";
 
 export const productApiSlice = apiSlice.injectEndpoints({
@@ -63,11 +67,59 @@ export const productApiSlice = apiSlice.injectEndpoints({
         };
       },
     }),
+
+    // cart
+    addToCart: builder.mutation<ApiResponse<Product>, AddToCartPayload>({
+      query: (payload) => {
+        return {
+          url: `/products/user/add-to-cart/`,
+          method: "POST",
+          body: payload
+        };
+      },
+      invalidatesTags: ["products"],
+    }),
+
+    cartItemList: builder.query<ApiResponse<CartItem[]>, void>({
+      query: () => {
+        return {
+          url: `/products/user/cart-item-list/`,
+          method: "GET",
+        };
+      },
+      providesTags: ["products"],
+    }),
+
+    // favourite
+    addToFavourite: builder.mutation<ApiResponse<Product>, AddToFavouritePayload>({
+      query: (payload) => {
+        return {
+          url: `/products/user/add-to-favourite/`,
+          method: "POST",
+          body: payload
+        };
+      },
+      invalidatesTags: ["products"],
+    }),
+
+    favouriteItemList: builder.query<ApiResponse<FavouriteItem[]>, void>({
+      query: () => {
+        return {
+          url: `/products/user/favourite-item-list/`,
+          method: "GET",
+        };
+      },
+      providesTags: ["products"],
+    }),
   }),
 });
 
 export const {
   useProductListQuery,
   useProductSettingsQuery,
-  useProductDetailsQuery
+  useProductDetailsQuery,
+  useCartItemListQuery,
+  useAddToCartMutation,
+  useAddToFavouriteMutation,
+  useFavouriteItemListQuery
 } = productApiSlice;

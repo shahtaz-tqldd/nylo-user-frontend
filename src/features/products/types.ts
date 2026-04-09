@@ -97,3 +97,34 @@ export interface ProductListQueryParams {
   min_price?: number;
   max_price?: number;
 }
+
+export interface AddToCartPayload{
+  product_id: string;
+  variant_id?: string;
+  action: string;
+}
+
+
+export interface AddToFavouritePayload{
+  product_id: string;
+  action: string;
+}
+
+export interface CartItem {
+  id?: string | number;
+  product_id?: string | number;
+  variant_id?: string | number | null;
+  quantity?: number;
+  unit_price?: string;
+  total_price?: number | string;
+  created_at?: string;
+  updated_at?: string;
+  product?: Product | null;
+  variant?: ProductVariant | null;
+}
+
+export interface FavouriteItem {
+  id?: string | number;
+  product_id?: string | number;
+  product?: Product | null;
+}

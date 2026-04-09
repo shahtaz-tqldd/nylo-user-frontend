@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   Heart,
   Share2,
@@ -20,8 +21,13 @@ import {
 
 import Button from "@/components/buttons/primary-button";
 import Title from "@/components/ui/title";
-import { useProductDetailsQuery } from "@/features/products/productApiSlice";
+import {
+  useAddToCartMutation,
+  useCartItemListQuery,
+  useProductDetailsQuery,
+} from "@/features/products/productApiSlice";
 import { ProductColor, ProductVariantSize } from "@/features/products/types";
+import { useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
 
 interface ImageGalleryProps {
@@ -385,7 +391,13 @@ const ProductDetailsSkeleton = () => {
 };
 
 const ProductDetailsPage = ({ productSlug }: { productSlug: string }) => {
+  const router = useRouter();
+  const { isAuthenticated } = useAppSelector((state) => state.auth);
   const { data, isLoading, isError } = useProductDetailsQuery(productSlug);
+  const { data: cartItemsResponse } = useCartItemListQuery(undefined, {
+    skip: !isAuthenticated,
+  });
+  const [addToCart, { isLoading: isCartUpdating }] = useAddToCartMutation();
   const product = data?.data;
 
   const variants = product?.variants ?? [];
@@ -408,6 +420,7 @@ const ProductDetailsPage = ({ productSlug }: { productSlug: string }) => {
   const [selectedColorId, setSelectedColorId] = useState<string | null>(null);
   const [selectedSizeId, setSelectedSizeId] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
+  const [cartFeedback, setCartFeedback] = useState<string | null>(null);
 
   useEffect(() => {
     if (!product) {
@@ -474,6 +487,76 @@ const ProductDetailsPage = ({ productSlug }: { productSlug: string }) => {
       ),
     ),
   );
+
+  const cartItems = cartItemsResponse?.data ?? [];
+  const selectedProductId = product?.id ? String(product.id) : null;
+  const selectedVariantId = selectedVariant?.id ? String(selectedVariant.id) : null;
+
+  const cartItem = cartItems.find((item) => {
+    const itemProductId = item.product_id ?? item.product?.id ?? item.id;
+    const itemVariantId = item.variant_id ?? item.variant?.id ?? null;
+
+    if (!selectedProductId || String(itemProductId) !== selectedProductId) {
+      return false;
+    }
+
+    if (selectedVariantId) {
+      return String(itemVariantId) === selectedVariantId;
+    }
+
+    return true;
+  });
+
+  const isInCart = Boolean(cartItem);
+  const actionMessage =
+    stockCount < 1
+      ? "This product is currently out of stock."
+      : selectedVariant || !variants.length
+        ? null
+        : "Select an available color and size first.";
+  const canSubmitCartAction = !actionMessage && Boolean(selectedProductId);
+
+  const handleCartAction = async (action: "add" | "remove") => {
+    if (!canSubmitCartAction || !selectedProductId) {
+      setCartFeedback(actionMessage);
+      return false;
+    }
+
+    try {
+      setCartFeedback(null);
+      const response = await addToCart({
+        product_id: selectedProductId,
+        variant_id: selectedVariantId ?? undefined,
+        action,
+      }).unwrap();
+
+      setCartFeedback(response.message ?? null);
+      return Boolean(response.success);
+    } catch (error) {
+      console.error(`Cart ${action} failed:`, error);
+      setCartFeedback(
+        isAuthenticated
+          ? `Unable to ${action === "add" ? "update" : "remove"} this item right now.`
+          : "Please sign in to manage your cart.",
+      );
+      return false;
+    }
+  };
+
+  const handleAddToCartClick = async () => {
+    await handleCartAction(isInCart ? "remove" : "add");
+  };
+
+  const handleBuyNowClick = async () => {
+    if (!isInCart) {
+      const added = await handleCartAction("add");
+      if (!added) {
+        return;
+      }
+    }
+
+    router.push("/checkout");
+  };
 
   if (isLoading) {
     return <ProductDetailsSkeleton />;
@@ -602,16 +685,40 @@ const ProductDetailsPage = ({ productSlug }: { productSlug: string }) => {
           />
 
           <div className="grid grid-cols-1 gap-4 pt-4 md:grid-cols-2">
-            <Button variant="accent" size="lg" disabled={stockCount < 1}>
+            <Button
+              variant="accent"
+              size="lg"
+              disabled={!canSubmitCartAction || isCartUpdating}
+              onClick={handleAddToCartClick}
+            >
               <div className="flex items-center gap-3">
                 <ShoppingCart className="h-5 w-5" />
-                Add to Cart
+                {isCartUpdating
+                  ? "Updating..."
+                  : isInCart
+                    ? "Remove from Cart"
+                    : "Add to Cart"}
               </div>
             </Button>
-            <Button link="/checkout" size="lg" disabled={stockCount < 1}>
-              Buy Now
+            <Button
+              size="lg"
+              disabled={!canSubmitCartAction || isCartUpdating}
+              onClick={handleBuyNowClick}
+            >
+              {isCartUpdating ? "Updating..." : "Buy Now"}
             </Button>
           </div>
+
+          {actionMessage || cartFeedback ? (
+            <p
+              className={cn(
+                "text-sm",
+                actionMessage ? "text-red-500" : "text-gray-600",
+              )}
+            >
+              {actionMessage ?? cartFeedback}
+            </p>
+          ) : null}
 
           <div className="py-2 px-3.5 rounded-2xl border border-gray-200 bg-gray-50/70 flex items-center justify-between">
             <p className="text-[11px] uppercase tracking-[0.15em] text-gray-400">
