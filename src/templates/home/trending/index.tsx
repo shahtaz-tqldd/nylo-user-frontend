@@ -1,13 +1,10 @@
-"use client";
 import React from "react";
 import NavigateButton from "@/components/buttons/navigate-button";
 import TrendingProductCard from "./trending-product-card";
-import { DEMO_PRODUCTS } from "@/templates/product-details/demo-data";
 import Title from "@/components/ui/title";
+import { Product } from "@/features/products/types";
 
-const Trending = () => {
-  const products = DEMO_PRODUCTS.slice(5, 8);
-
+const Trending = ({ products }: { products: Product[] }) => {
   return (
     <section className="container pt-16 md:pt-24 pb-20 md:pb-36">
       <div className="grid grid-cols-1 md:grid-cols-5 items-center gap-12 md:gap-0">

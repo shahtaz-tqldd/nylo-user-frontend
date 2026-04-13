@@ -7,6 +7,7 @@ import React, {
   useEffect,
   useRef,
 } from "react";
+import { useSearchParams } from "next/navigation";
 import Filter from "./filter";
 import Header from "./header";
 import { FilterState } from "./types";
@@ -24,12 +25,15 @@ const defaultFilters: FilterState = {
   priceRange: [40, 800],
   sizes: [],
   colors: [],
+  collections: [],
 };
 
 const PAGE_SIZE = 10;
 
 const ShopPage = () => {
+  const searchParams = useSearchParams();
   const initialFilters = {};
+  const requestedCollectionSlug = searchParams.get("collection");
   const [filters, setFilters] = useState<FilterState>({
     ...defaultFilters,
     ...initialFilters,
@@ -44,6 +48,7 @@ const ShopPage = () => {
   const [page, setPage] = useState(1);
   const [products, setProducts] = useState<Product[]>([]);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const syncedCollectionSlugRef = useRef<string | null>(null);
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
@@ -73,6 +78,9 @@ const ShopPage = () => {
       color_ids: appliedFilters.colors.length
         ? appliedFilters.colors
         : undefined,
+      collection_ids: appliedFilters.collections.length
+        ? appliedFilters.collections
+        : undefined,
       min_price: isPriceFilterActive ? appliedFilters.priceRange[0] : undefined,
       max_price: isPriceFilterActive ? appliedFilters.priceRange[1] : undefined,
     }),
@@ -90,6 +98,7 @@ const ShopPage = () => {
       appliedFilters.genders.length > 0 ||
       appliedFilters.sizes.length > 0 ||
       appliedFilters.colors.length > 0 ||
+      appliedFilters.collections.length > 0 ||
       appliedFilters.priceRange[0] !== defaultFilters.priceRange[0] ||
       appliedFilters.priceRange[1] !== defaultFilters.priceRange[1] ||
       searchQuery.trim() !== "" ||
@@ -129,6 +138,42 @@ const ShopPage = () => {
   const { data, isLoading, isFetching } = useProductListQuery(productQueryArgs);
   const { data: settings, isLoading: isLoadingSettings } =
     useProductSettingsQuery();
+
+  useEffect(() => {
+    if (!requestedCollectionSlug) {
+      syncedCollectionSlugRef.current = null;
+      return;
+    }
+
+    if (!settings?.data?.collections?.length) {
+      return;
+    }
+
+    if (syncedCollectionSlugRef.current === requestedCollectionSlug) {
+      return;
+    }
+
+    const matchedCollection = settings.data.collections.find(
+      (collection) => collection.slug === requestedCollectionSlug,
+    );
+
+    if (!matchedCollection) {
+      return;
+    }
+
+    const nextCollectionIds = [matchedCollection.id];
+    const nextFilters = {
+      ...defaultFilters,
+      ...filters,
+      collections: nextCollectionIds,
+    };
+
+    syncedCollectionSlugRef.current = requestedCollectionSlug;
+    setFilters(nextFilters);
+    setAppliedFilters(nextFilters);
+    setSelectedCategoryId(undefined);
+    setPage(1);
+  }, [filters, requestedCollectionSlug, settings]);
 
   useEffect(() => {
     setProducts([]);
@@ -211,6 +256,7 @@ const ShopPage = () => {
           categories={settings?.data?.categories || []}
           sizes={settings?.data?.sizes || []}
           colors={settings?.data?.colors || []}
+          collections={settings?.data?.collections || []}
           genders={settings?.data?.genders || []}
           defaultPriceRange={defaultFilters.priceRange}
           filters={appliedFilters}

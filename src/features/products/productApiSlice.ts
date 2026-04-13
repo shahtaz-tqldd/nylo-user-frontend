@@ -8,6 +8,8 @@ import type {
   AddToFavouritePayload,
   CartItem,
   FavouriteItem,
+  CollectionListQueryParams,
+  FeaturedItemsResponse,
 } from "./types";
 
 export const productApiSlice = apiSlice.injectEndpoints({
@@ -40,6 +42,10 @@ export const productApiSlice = apiSlice.injectEndpoints({
         );
         params?.color_ids?.forEach((value) =>
           searchParams.append("color_ids", value),
+        );
+
+        params?.collection_ids?.forEach((value) =>
+          searchParams.append("collection_id", value),
         );
 
         return {
@@ -102,7 +108,7 @@ export const productApiSlice = apiSlice.injectEndpoints({
       invalidatesTags: ["products"],
     }),
 
-    favouriteItemList: builder.query<ApiResponse<FavouriteItem[]>, void>({
+    favouriteItemList: builder.query<ApiResponse<Product[]>, void>({
       query: () => {
         return {
           url: `/products/user/favourite-item-list/`,
@@ -111,6 +117,34 @@ export const productApiSlice = apiSlice.injectEndpoints({
       },
       providesTags: ["products"],
     }),
+
+    // collection
+    collectionList: builder.query<ApiResponse<Product[]>, CollectionListQueryParams | void>({
+      query: (params) => {
+        const searchParams = new URLSearchParams();
+
+        if (params?.is_signature) {
+          searchParams.set("is_signature", params.is_signature);
+        }
+
+        return {
+          url: `/products/collection/list/${searchParams.toString() ? `?${searchParams.toString()}` : ""}`,
+          method: "GET",
+        };
+      },
+      providesTags: ["collection-list"],
+    }),
+
+    // featured
+    featuredItems: builder.query<ApiResponse<FeaturedItemsResponse>, void>({
+      query: () => {
+        return {
+          url: `/products/featured/`,
+          method: "GET",
+        };
+      },
+    }),
+
   }),
 });
 
@@ -121,5 +155,7 @@ export const {
   useCartItemListQuery,
   useAddToCartMutation,
   useAddToFavouriteMutation,
-  useFavouriteItemListQuery
+  useFavouriteItemListQuery,
+  useCollectionListQuery,
+  useFeaturedItemsQuery,
 } = productApiSlice;

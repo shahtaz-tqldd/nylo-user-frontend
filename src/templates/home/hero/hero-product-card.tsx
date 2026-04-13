@@ -1,14 +1,11 @@
 import React from "react";
-import Button from "@/components/buttons/primary-button";
-
-import { Star } from "@/assets/algo-icons";
-import type { ProductProps } from "@/templates/product-details/types";
 import Link from "next/link";
-import { productName } from "@/lib/sanitize";
+import Button from "@/components/buttons/primary-button";
+import type { Product } from "@/features/products/types";
 
 interface HeroProductCardProps {
   className: string;
-  product: ProductProps | undefined;
+  product: Product | undefined;
 }
 
 const HeroProductCard = ({ className, product }: HeroProductCardProps) => {
@@ -22,21 +19,14 @@ const HeroProductCard = ({ className, product }: HeroProductCardProps) => {
         ${className}
       `}
     >
-      <h5 className="font-bold text-lg text-gray-800 mb-2">{product.name}</h5>
-
-      {/* Rating */}
-      <div className="flex items-center gap-0.5 mb-3">
-        {[...Array(5)].map((_, i) => (
-          <Star key={i} size={3.5} className="fill-[#1C274C]" />
-        ))}
-        <span className="text-sm text-gray-500 ml-1">
-          ({product.numReviews} reviews)
-        </span>
-      </div>
+      <p className="text-xs">
+        {product.category_name} for {product.gender}
+      </p>
+      <h5 className="font-bold text-lg text-gray-800 mb-2">{product.title}</h5>
 
       {/* Price */}
       <div className="text-2xl font-extrabold text-gray-900 mb-4">
-        {product.price}
+        ${product.price}
       </div>
 
       {/* Color Options */}
@@ -48,7 +38,7 @@ const HeroProductCard = ({ className, product }: HeroProductCardProps) => {
 
       {/* Button */}
       <div>
-        <Link href={`/products/${productName(product.name)}`}>
+        <Link href={`/products/${product.slug}`}>
           <Button size="xs">See Product</Button>
         </Link>
       </div>

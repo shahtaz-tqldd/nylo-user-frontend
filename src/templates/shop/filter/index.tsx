@@ -36,6 +36,7 @@ const Filter: React.FC<FilterProps> = ({
       filters.genders.length > 0 ||
       filters.sizes.length > 0 ||
       filters.colors.length > 0 ||
+      filters.collections.length > 0 ||
       filters.priceRange[0] !== defaultFilters.priceRange[0] ||
       filters.priceRange[1] !== defaultFilters.priceRange[1]
     );
@@ -100,6 +101,17 @@ const Filter: React.FC<FilterProps> = ({
     [filters, updateFilters],
   );
 
+  const handleCollectionToggle = useCallback(
+    (collectionId: string, checked: boolean) => {
+      const newCollections = checked
+        ? [...filters.collections, collectionId]
+        : filters.collections.filter((collection) => collection !== collectionId);
+
+      updateFilters({ ...filters, collections: newCollections });
+    },
+    [filters, updateFilters],
+  );
+
   // Apply filters
   const handleApplyFilters = useCallback(() => {
     setLastAppliedFilters(filters);
@@ -118,6 +130,12 @@ const Filter: React.FC<FilterProps> = ({
       ?.filter((color) => filters.colors.includes(color.id))
       .map((color) => color.name) ?? [];
   }, [filters.colors, settings?.colors]);
+
+  const selectedCollectionLabels = useMemo(() => {
+    return settings?.collections
+      ?.filter((collection) => filters.collections.includes(collection.id))
+      .map((collection) => collection.title) ?? [];
+  }, [filters.collections, settings?.collections]);
 
   return (
     <div className="space-y-8">
@@ -230,6 +248,41 @@ const Filter: React.FC<FilterProps> = ({
         {filters.colors.length > 0 && (
           <div className="text-sm text-gray-600 font-medium mt-4">
             Selected: {selectedColorLabels.join(", ")}
+          </div>
+        )}
+      </div>
+
+      <div>
+        <h4 className="mb-3 font-medium text-gray-900">Collections</h4>
+        <div className="space-y-3">
+          {settings?.collections?.map((collection) => (
+            <label
+              key={collection.id}
+              htmlFor={collection.id}
+              className="flex items-center gap-3 cursor-pointer text-sm hover:text-gray-900 transition-colors"
+            >
+              <Checkbox
+                id={collection.id}
+                checked={filters.collections.includes(collection.id)}
+                onCheckedChange={(checked) =>
+                  handleCollectionToggle(collection.id, !!checked)
+                }
+              />
+              <span
+                className={
+                  filters.collections.includes(collection.id)
+                    ? "font-medium"
+                    : ""
+                }
+              >
+                {collection.title}
+              </span>
+            </label>
+          ))}
+        </div>
+        {filters.collections.length > 0 && (
+          <div className="text-sm text-gray-600 font-medium mt-4">
+            Selected: {selectedCollectionLabels.join(", ")}
           </div>
         )}
       </div>

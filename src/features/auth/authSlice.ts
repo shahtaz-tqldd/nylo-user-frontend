@@ -10,18 +10,26 @@ const initialState: AuthState = {
   accessToken: accessToken || null,
   isAuthenticated: !!accessToken,
   user: null,
+  isAuthDialogOpen: false,
 };
 
 export const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
+    openAuthDialog: (state) => {
+      state.isAuthDialogOpen = true;
+    },
+    closeAuthDialog: (state) => {
+      state.isAuthDialogOpen = false;
+    },
     userLoggedIn: (
       state,
       action: PayloadAction<AuthTokens & { rememberMe: boolean }>,
     ) => {
       state.accessToken = action.payload.accessToken;
       state.isAuthenticated = true;
+      state.isAuthDialogOpen = false;
       if (action.payload.rememberMe) {
         setAuthCookie({
           accessToken: action.payload.accessToken,
@@ -41,12 +49,18 @@ export const authSlice = createSlice({
       state.accessToken = null;
       state.user = null;
       state.isAuthenticated = false;
+      state.isAuthDialogOpen = false;
       clearTokens();
     },
   },
 });
 
-export const { userLoggedIn, userDetailsFetched, userLoggedOut } =
-  authSlice.actions;
+export const {
+  openAuthDialog,
+  closeAuthDialog,
+  userLoggedIn,
+  userDetailsFetched,
+  userLoggedOut,
+} = authSlice.actions;
 
 export default authSlice.reducer;

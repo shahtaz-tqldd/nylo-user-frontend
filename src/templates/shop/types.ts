@@ -3,6 +3,7 @@ export interface FilterState {
   priceRange: [number, number];
   sizes: string[];
   colors: string[];
+  collections: string[];
 }
 
 export interface FilterProps {

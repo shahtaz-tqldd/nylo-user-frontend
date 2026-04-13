@@ -26,6 +26,7 @@ export interface AuthState {
   accessToken: string | null;
   isAuthenticated: boolean;
   user: AuthUser | null;
+  isAuthDialogOpen: boolean;
 }
 
 export interface LoginPayload {

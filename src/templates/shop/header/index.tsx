@@ -5,6 +5,7 @@ import Button from "@/components/buttons/primary-button";
 import { FilterState } from "../types";
 import {
   ProductCategory,
+  ProductCollection,
   ProductColor,
   ProductGender,
   ProductSize,
@@ -13,6 +14,7 @@ interface HeaderProps {
   categories: ProductCategory[];
   sizes: ProductSize[];
   colors: ProductColor[];
+  collections: ProductCollection[];
   genders: ProductGender[];
   defaultPriceRange: [number, number];
   hasActiveFilters: boolean;
@@ -29,6 +31,7 @@ const Header: React.FC<HeaderProps> = ({
   categories,
   sizes,
   colors,
+  collections,
   genders,
   defaultPriceRange,
   hasActiveFilters,
@@ -57,6 +60,11 @@ const Header: React.FC<HeaderProps> = ({
   const selectedGenderLabels = genders
     .filter((gender) => filters.genders.includes(gender.value))
     .map((gender) => gender.label)
+    .join(", ");
+
+  const selectedCollectionLabels = collections
+    .filter((collection) => filters.collections.includes(collection.id))
+    .map((collection) => collection.title)
     .join(", ");
 
   return (
@@ -185,6 +193,16 @@ const Header: React.FC<HeaderProps> = ({
                   label="Colors"
                   value={selectedColorLabels}
                   onRemove={() => onRemoveFilter?.({ ...filters, colors: [] })}
+                />
+              )}
+
+              {filters.collections.length > 0 && (
+                <FilterChip
+                  label="Collections"
+                  value={selectedCollectionLabels}
+                  onRemove={() =>
+                    onRemoveFilter?.({ ...filters, collections: [] })
+                  }
                 />
               )}
             </div>

@@ -22,6 +22,8 @@ import { DialogTrigger } from "../ui/dialog";
 import { Cart } from "@/assets/algo-icons";
 import IconButton from "../buttons/icon-button";
 import { useState } from "react";
+import { openAuthDialog } from "@/features/auth/authSlice";
+import { useDispatch } from "react-redux";
 
 const getCartItemImage = (item: CartItem) =>
   item.variant?.image_url ??
@@ -39,7 +41,7 @@ export default function CartDrawer() {
   const { data, isLoading, isFetching } = useCartItemListQuery(undefined, {
     skip: !isAuthenticated,
   });
-  const total_items = data?.meta?.total_items || 0;
+  const total_items = data?.meta?.total_items;
   const [addToCart, { isLoading: isRemoving }] = useAddToCartMutation();
 
   const cartItems = data?.data ?? [];
@@ -69,12 +71,14 @@ export default function CartDrawer() {
     }
   };
 
+  const dispatch = useDispatch();
+
   return (
     <Drawer open={open} onOpenChange={setOpen} direction="right">
       <DialogTrigger asChild>
         <div className="relative">
-          {total_items && (
-            <span className="absolute top-0 right-0 text-xs bg-red-500 h-6 w-6 rounded-full text-white center z-20">
+          {Boolean(total_items) && (
+            <span className="font-semibold absolute top-0 right-0 text-xs bg-red-500 h-5 w-5 rounded-full text-white center z-20 pointer-events-none">
               {total_items}
             </span>
           )}
@@ -92,7 +96,13 @@ export default function CartDrawer() {
         <div className="flex max-h-[70vh] flex-col gap-5 overflow-y-auto px-4 py-2">
           {!isAuthenticated ? (
             <p className="text-sm text-gray-500">
-              Sign in to view your cart items.
+              <button
+                onClick={() => dispatch(openAuthDialog())}
+                className="text-primary underline"
+              >
+                Sign in
+              </button>{" "}
+              to view your cart items.
             </p>
           ) : isLoading || isFetching ? (
             <p className="text-sm text-gray-500">Loading cart items...</p>
@@ -148,23 +158,26 @@ export default function CartDrawer() {
             ))
           )}
         </div>
-
         <DrawerFooter className="border-t border-t-gray-200">
-          {isAuthenticated && cartItems.length ? (
-            <div className="flex w-full items-center justify-between text-sm text-gray-600">
-              <span>{totalItems} item(s)</span>
-              <span className="font-semibold text-gray-900">
-                Subtotal: {formatPrice(subtotal)}
-              </span>
-            </div>
+          {Boolean(isAuthenticated && cartItems.length) ? (
+            <>
+              <div className="flex w-full items-center justify-between text-sm text-gray-600">
+                <span>
+                  {totalItems} item{totalItems > 1 ? "s" : ""}
+                </span>
+                <span className="font-semibold text-gray-900">
+                  Subtotal: {formatPrice(subtotal)}
+                </span>
+              </div>
+              <Button
+                className="w-full"
+                link="/checkout"
+                disabled={!isAuthenticated || !cartItems.length}
+              >
+                Checkout
+              </Button>
+            </>
           ) : null}
-          <Button
-            className="w-full"
-            link={isAuthenticated && cartItems.length ? "/checkout" : null}
-            disabled={!isAuthenticated || !cartItems.length}
-          >
-            Checkout
-          </Button>
           <DrawerClose asChild>
             <Button variant="rubix" className="w-full">
               Close

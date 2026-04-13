@@ -22,6 +22,8 @@ import {
 } from "@/features/auth/authApiSlice";
 import { useAppDispatch, useAppSelector } from "@/hooks/redux";
 import {
+  closeAuthDialog,
+  openAuthDialog,
   userDetailsFetched,
   userLoggedIn,
 } from "@/features/auth/authSlice";
@@ -32,18 +34,29 @@ import type {
 } from "@/features/auth/types";
 
 const AuthDialog = () => {
-  const [open, setOpen] = useState(false);
-  const { isAuthenticated } = useAppSelector((state) => state.auth);
+  const dispatch = useAppDispatch();
+  const { isAuthenticated, isAuthDialogOpen } = useAppSelector(
+    (state) => state.auth,
+  );
 
   if (isAuthenticated) {
     return null;
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog
+      open={isAuthDialogOpen}
+      onOpenChange={(isOpen) => {
+        dispatch(isOpen ? openAuthDialog() : closeAuthDialog());
+      }}
+    >
       {/* Trigger Button */}
       <DialogTrigger asChild>
-        <IconButton icon={User} size={20} />
+        <IconButton
+          icon={User}
+          size={20}
+          onClick={() => dispatch(openAuthDialog())}
+        />
       </DialogTrigger>
 
       {/* Dialog Box */}
@@ -61,7 +74,7 @@ const AuthDialog = () => {
 
         {/* Tabs */}
         <div className="mt-4">
-          <AuthTabs onAuthenticated={() => setOpen(false)} />
+          <AuthTabs onAuthenticated={() => dispatch(closeAuthDialog())} />
         </div>
       </DialogContent>
     </Dialog>
@@ -105,7 +118,8 @@ const AuthTabs = ({ onAuthenticated }: AuthTabsProps) => {
   const [activeTab, setActiveTab] = useState<"login" | "signup">("login");
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [login, { isLoading: isLoginLoading }] = useLoginMutation();
-  const [register, { isLoading: isRegisterLoading }] = useRegistrationMutation();
+  const [register, { isLoading: isRegisterLoading }] =
+    useRegistrationMutation();
   const { refetch: refetchMe } = useMeQuery(undefined, { skip: true });
 
   const loginForm = useForm<LoginFormValues>({
@@ -183,14 +197,21 @@ const AuthTabs = ({ onAuthenticated }: AuthTabsProps) => {
       } satisfies LoginPayload).unwrap();
 
       if (res.success) {
-        const authenticated = await handleAuthSuccess(res.data, data.rememberMe);
+        const authenticated = await handleAuthSuccess(
+          res.data,
+          data.rememberMe,
+        );
         if (!authenticated) {
-          setSubmitError(res.message ?? "Login succeeded but token payload was missing.");
+          setSubmitError(
+            res.message ?? "Login succeeded but token payload was missing.",
+          );
         }
       }
     } catch (error) {
       console.error("Login failed:", error);
-      setSubmitError("Unable to sign in. Check your credentials and try again.");
+      setSubmitError(
+        "Unable to sign in. Check your credentials and try again.",
+      );
     }
   };
 
@@ -326,7 +347,10 @@ const AuthTabs = ({ onAuthenticated }: AuthTabsProps) => {
 
       {/* SIGNUP FORM */}
       <TabsContent value="signup">
-        <form onSubmit={handleSignupSubmit(onRegisterSubmit)} className="space-y-5">
+        <form
+          onSubmit={handleSignupSubmit(onRegisterSubmit)}
+          className="space-y-5"
+        >
           <div className="grid grid-cols-2 gap-3">
             <Controller
               name="first_name"
@@ -372,14 +396,14 @@ const AuthTabs = ({ onAuthenticated }: AuthTabsProps) => {
               },
             }}
             render={({ field }) => (
-                <FloatingInput
-                  {...field}
-                  label="Email Address"
-                  type="email"
-                  error={signupErrors.email?.message}
-                />
-              )}
-            />
+              <FloatingInput
+                {...field}
+                label="Email Address"
+                type="email"
+                error={signupErrors.email?.message}
+              />
+            )}
+          />
 
           <Controller
             name="password"
@@ -392,14 +416,14 @@ const AuthTabs = ({ onAuthenticated }: AuthTabsProps) => {
               },
             }}
             render={({ field }) => (
-                <FloatingInput
-                  {...field}
-                  label="Password"
-                  type="password"
-                  error={signupErrors.password?.message}
-                />
-              )}
-            />
+              <FloatingInput
+                {...field}
+                label="Password"
+                type="password"
+                error={signupErrors.password?.message}
+              />
+            )}
+          />
           <Controller
             name="confirm_password"
             control={signupControl}
@@ -415,12 +439,12 @@ const AuthTabs = ({ onAuthenticated }: AuthTabsProps) => {
             }}
             render={({ field }) => (
               <FloatingInput
-                  {...field}
-                  label="Confirm Password"
-                  type="password"
-                  error={signupErrors.confirm_password?.message}
-                />
-              )}
+                {...field}
+                label="Confirm Password"
+                type="password"
+                error={signupErrors.confirm_password?.message}
+              />
+            )}
           />
 
           <Controller
@@ -431,7 +455,9 @@ const AuthTabs = ({ onAuthenticated }: AuthTabsProps) => {
                 <Checkbox
                   id="signupRememberMe"
                   checked={field.value}
-                  onCheckedChange={(checked) => field.onChange(Boolean(checked))}
+                  onCheckedChange={(checked) =>
+                    field.onChange(Boolean(checked))
+                  }
                 />
                 <label
                   htmlFor="signupRememberMe"

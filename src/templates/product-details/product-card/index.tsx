@@ -104,7 +104,7 @@ const ProductCard = ({
             alt={productTitle}
             height={500}
             width={500}
-            className="h-full w-full object-cover transition-transform duration-500 will-change-transform group-hover:scale-105"
+            className="h-full w-full object-contain transition-transform duration-500 will-change-transform group-hover:scale-105"
           />
 
           <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/10 to-transparent" />

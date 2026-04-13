@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ShoppingCart,
@@ -9,38 +9,41 @@ import {
   Gift,
   AlertCircle,
   Check,
-  MapPinned,
-  MapPinIcon,
   CheckCircle,
 } from "lucide-react";
 import Button from "@/components/buttons/primary-button";
 import { FloatingInput, Input } from "@/components/ui/input";
-import {
-  CityIcon,
-  EmailIcon,
-  MapIcon,
-  PhoneIcon,
-  UserIcon,
-  WorldIcon,
-} from "@/assets/algo-icons";
 import Title from "@/components/ui/title";
 import { useCartItemListQuery } from "@/features/products/productApiSlice";
 import { useAppSelector } from "@/hooks/redux";
+import { openAuthDialog } from "@/features/auth/authSlice";
+import { useDispatch } from "react-redux";
+import { useCreateStripeCheckoutSessionMutation } from "@/features/orders/orderApiSlice";
+import { getStripe } from "@/lib/stripe";
 
 interface ShippingInfo {
   firstName: string;
   lastName: string;
   email: string;
   phone: string;
-  address: string;
+  addressLine1: string;
+  addressLine2: string;
   city: string;
+  stateProvince: string;
   zipCode: string;
   country: string;
 }
 
+type ShippingField = keyof ShippingInfo;
+
+const DEFAULT_COUNTRY = "United States";
+
+const getStringValue = (value: unknown) =>
+  typeof value === "string" ? value : "";
+
 const CheckoutPage: React.FC = () => {
   const router = useRouter();
-  const { isAuthenticated } = useAppSelector((state) => state.auth);
+  const { isAuthenticated, user } = useAppSelector((state) => state.auth);
   const { data, isLoading, isFetching } = useCartItemListQuery(undefined, {
     skip: !isAuthenticated,
   });
@@ -50,14 +53,57 @@ const CheckoutPage: React.FC = () => {
     lastName: "",
     email: "",
     phone: "",
-    address: "",
+    addressLine1: "",
+    addressLine2: "",
     city: "",
+    stateProvince: "",
     zipCode: "",
-    country: "United States",
+    country: DEFAULT_COUNTRY,
   });
   const [paymentMethod, setPaymentMethod] = useState("card");
   const [promoCode, setPromoCode] = useState("");
   const [promoApplied, setPromoApplied] = useState(false);
+  const [shippingTouched, setShippingTouched] = useState<
+    Partial<Record<ShippingField, boolean>>
+  >({});
+  const [showShippingErrors, setShowShippingErrors] = useState(false);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
+  const [createStripeCheckoutSession, { isLoading: isCreatingStripeCheckout }] =
+    useCreateStripeCheckoutSessionMutation();
+
+  useEffect(() => {
+    if (!user) {
+      return;
+    }
+
+    const fullName = getStringValue(user.name).trim();
+    const [fallbackFirstName = "", ...fallbackLastNameParts] = fullName.split(
+      " ",
+    );
+    const addressLine1 = getStringValue(user.address_line_1).trim();
+    const addressLine2 = getStringValue(user.address_line_2).trim();
+
+    setShippingInfo((prev) => ({
+      firstName:
+        prev.firstName || getStringValue(user.first_name).trim() || fallbackFirstName,
+      lastName:
+        prev.lastName ||
+        getStringValue(user.last_name).trim() ||
+        fallbackLastNameParts.join(" "),
+      email: prev.email || getStringValue(user.email).trim(),
+      phone: prev.phone || getStringValue(user.phone).trim(),
+      addressLine1: prev.addressLine1 || addressLine1,
+      addressLine2: prev.addressLine2 || addressLine2,
+      city: prev.city || getStringValue(user.city).trim(),
+      stateProvince:
+        prev.stateProvince || getStringValue(user.state_province).trim(),
+      zipCode: prev.zipCode || getStringValue(user.postal_code).trim(),
+      country:
+        prev.country && prev.country !== DEFAULT_COUNTRY
+          ? prev.country
+          : getStringValue(user.country).trim() || prev.country,
+    }));
+  }, [user]);
 
   const cartItems = data?.data ?? [];
   const cartCount = cartItems.reduce(
@@ -77,6 +123,10 @@ const CheckoutPage: React.FC = () => {
     setShippingInfo((prev) => ({ ...prev, [field]: value }));
   };
 
+  const handleShippingBlur = (field: ShippingField) => {
+    setShippingTouched((prev) => ({ ...prev, [field]: true }));
+  };
+
   const handlePromoApply = () => {
     if (promoCode.toLowerCase() === "save10") {
       setPromoApplied(true);
@@ -94,6 +144,147 @@ const CheckoutPage: React.FC = () => {
 
   const isCheckoutBlocked =
     !isAuthenticated || (!isLoading && !isFetching && !cartItems.length);
+  const requiredShippingFields: ShippingField[] = [
+    "firstName",
+    "lastName",
+    "email",
+    "phone",
+    "addressLine1",
+    "city",
+    "stateProvince",
+    "zipCode",
+    "country",
+  ];
+  const shippingFieldLabels: Record<ShippingField, string> = {
+    firstName: "First name",
+    lastName: "Last name",
+    email: "Email",
+    phone: "Phone number",
+    addressLine1: "Address line 1",
+    addressLine2: "Address line 2",
+    city: "City",
+    stateProvince: "State / Province",
+    zipCode: "Postal code",
+    country: "Country",
+  };
+  const isShippingInfoComplete = requiredShippingFields.every(
+    (field) => shippingInfo[field].trim().length > 0,
+  );
+  const getShippingFieldError = (field: ShippingField) => {
+    if (!requiredShippingFields.includes(field)) {
+      return undefined;
+    }
+
+    if (shippingInfo[field].trim()) {
+      return undefined;
+    }
+
+    if (!showShippingErrors && !shippingTouched[field]) {
+      return undefined;
+    }
+
+    return `${shippingFieldLabels[field]} is required.`;
+  };
+
+  const handleShippingStepContinue = (nextStep: number) => {
+    setCheckoutError(null);
+
+    if (isCheckoutBlocked) {
+      return;
+    }
+
+    if (!isShippingInfoComplete) {
+      setShowShippingErrors(true);
+      setShippingTouched(
+        requiredShippingFields.reduce<Partial<Record<ShippingField, boolean>>>(
+          (acc, field) => {
+            acc[field] = true;
+            return acc;
+          },
+          {},
+        ),
+      );
+      return;
+    }
+
+    setCurrentStep(nextStep);
+  };
+
+  const handleCompleteOrder = async () => {
+    setCheckoutError(null);
+
+    if (isCheckoutBlocked) {
+      return;
+    }
+
+    if (!isShippingInfoComplete) {
+      setCurrentStep(1);
+      handleShippingStepContinue(1);
+      return;
+    }
+
+    if (paymentMethod !== "card") {
+      setCheckoutError("Only Stripe card checkout is wired right now.");
+      return;
+    }
+
+    try {
+      const origin = window.location.origin;
+      const response = await createStripeCheckoutSession({
+        shipping_address: {
+          first_name: shippingInfo.firstName.trim(),
+          last_name: shippingInfo.lastName.trim(),
+          email: shippingInfo.email.trim(),
+          phone: shippingInfo.phone.trim(),
+          address_line_1: shippingInfo.addressLine1.trim(),
+          address_line_2: shippingInfo.addressLine2.trim(),
+          city: shippingInfo.city.trim(),
+          state_province: shippingInfo.stateProvince.trim(),
+          postal_code: shippingInfo.zipCode.trim(),
+          country: shippingInfo.country.trim(),
+        },
+        success_url: `${origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${origin}/checkout/cancel`,
+        promo_code: promoCode.trim() || undefined,
+      }).unwrap();
+
+      const sessionId = response.data.session_id ?? response.data.sessionId;
+      const checkoutUrl =
+        response.data.checkout_url ?? response.data.checkoutUrl;
+
+      if (checkoutUrl) {
+        window.location.href = checkoutUrl;
+        return;
+      }
+
+      if (!sessionId) {
+        throw new Error("Stripe session was missing from the API response.");
+      }
+
+      const stripe = await getStripe();
+
+      if (!stripe) {
+        throw new Error("Stripe failed to initialize.");
+      }
+
+      const redirectResult = await stripe.redirectToCheckout({ sessionId });
+
+      if (redirectResult.error) {
+        throw new Error(
+          redirectResult.error.message ?? "Redirecting to Stripe failed.",
+        );
+      }
+    } catch (error) {
+      console.error("Creating Stripe checkout session failed:", error);
+      setCheckoutError(
+        error instanceof Error
+          ? error.message
+          : "Unable to start checkout right now.",
+      );
+    }
+  };
+
+  const dispatch = useDispatch();
 
   return (
     <div className="container pt-32 pb-20">
@@ -158,125 +349,121 @@ const CheckoutPage: React.FC = () => {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        First Name
-                      </label>
-                      <Input
-                        icon={<UserIcon size={5} />}
-                        placeholder="First Name"
-                        value={shippingInfo.firstName}
-                        onChange={(e) =>
-                          handleInputChange("firstName", e.target.value)
-                        }
-                        />
-                        </div> */}
                     <FloatingInput
                       label="First Name"
                       name="firstName"
                       value={shippingInfo.firstName}
+                      error={getShippingFieldError("firstName")}
                       onChange={(e) =>
                         handleInputChange("firstName", e.target.value)
                       }
+                      onBlur={() => handleShippingBlur("firstName")}
                     />
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Last Name
-                      </label>
-                      <Input
-                        icon={<UserIcon size={5} />}
-                        placeholder="Last Name"
-                        value={shippingInfo.lastName}
-                        onChange={(e) =>
-                          handleInputChange("lastName", e.target.value)
-                        }
-                      />
-                    </div>
+                    <FloatingInput
+                      label="Last Name"
+                      name="lastName"
+                      value={shippingInfo.lastName}
+                      error={getShippingFieldError("lastName")}
+                      onChange={(e) =>
+                        handleInputChange("lastName", e.target.value)
+                      }
+                      onBlur={() => handleShippingBlur("lastName")}
+                    />
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Email Address
-                      </label>
-                      <Input
-                        icon={<EmailIcon size={5} />}
-                        placeholder="example@email.com"
-                        value={shippingInfo.email}
-                        onChange={(e) =>
-                          handleInputChange("email", e.target.value)
-                        }
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Phone Number
-                      </label>
-                      <Input
-                        icon={<PhoneIcon size={5} />}
-                        placeholder="88993216"
-                        value={shippingInfo.phone}
-                        onChange={(e) =>
-                          handleInputChange("phone", e.target.value)
-                        }
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Address
-                    </label>
-                    <Input
-                      icon={<MapIcon size={5} />}
-                      placeholder="Address"
-                      value={shippingInfo.address}
+                    <FloatingInput
+                      label="Email"
+                      name="email"
+                      value={shippingInfo.email}
+                      error={getShippingFieldError("email")}
                       onChange={(e) =>
-                        handleInputChange("address", e.target.value)
+                        handleInputChange("email", e.target.value)
                       }
+                      onBlur={() => handleShippingBlur("email")}
+                    />
+                    <FloatingInput
+                      label="Phone Number"
+                      name="phone"
+                      value={shippingInfo.phone}
+                      error={getShippingFieldError("phone")}
+                      onChange={(e) =>
+                        handleInputChange("phone", e.target.value)
+                      }
+                      onBlur={() => handleShippingBlur("phone")}
                     />
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        City
-                      </label>
-                      <Input
-                        icon={<CityIcon size={5} />}
-                        placeholder="Dhaka"
-                        value={shippingInfo.city}
-                        onChange={(e) =>
-                          handleInputChange("city", e.target.value)
-                        }
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        ZIP Code
-                      </label>
-                      <Input
-                        icon={<WorldIcon size={5} />}
-                        placeholder="Zip Code"
-                        value={shippingInfo.zipCode}
-                        onChange={(e) =>
-                          handleInputChange("zipCode", e.target.value)
-                        }
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Country
-                      </label>
-                      <Input
-                        icon={<MapPinIcon size={20} />}
-                        placeholder="Bangladesh"
-                        value={shippingInfo.country}
-                        onChange={(e) =>
-                          handleInputChange("country", e.target.value)
-                        }
-                      />
-                    </div>
+                  <FloatingInput
+                    label="Address Line 1"
+                    name="addressLine1"
+                    value={shippingInfo.addressLine1}
+                    error={getShippingFieldError("addressLine1")}
+                    onChange={(e) =>
+                      handleInputChange("addressLine1", e.target.value)
+                    }
+                    onBlur={() => handleShippingBlur("addressLine1")}
+                  />
+
+                  <FloatingInput
+                    label="Address Line 2"
+                    name="addressLine2"
+                    value={shippingInfo.addressLine2}
+                    onChange={(e) =>
+                      handleInputChange("addressLine2", e.target.value)
+                    }
+                    onBlur={() => handleShippingBlur("addressLine2")}
+                  />
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FloatingInput
+                      label="City"
+                      name="city"
+                      value={shippingInfo.city}
+                      error={getShippingFieldError("city")}
+                      onChange={(e) =>
+                        handleInputChange("city", e.target.value)
+                      }
+                      onBlur={() => handleShippingBlur("city")}
+                    />
+                    <FloatingInput
+                      label="State / Province"
+                      name="stateProvince"
+                      value={shippingInfo.stateProvince}
+                      error={getShippingFieldError("stateProvince")}
+                      onChange={(e) =>
+                        handleInputChange("stateProvince", e.target.value)
+                      }
+                      onBlur={() => handleShippingBlur("stateProvince")}
+                    />
                   </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FloatingInput
+                      label="Postal Code"
+                      name="zipCode"
+                      value={shippingInfo.zipCode}
+                      error={getShippingFieldError("zipCode")}
+                      onChange={(e) =>
+                        handleInputChange("zipCode", e.target.value)
+                      }
+                      onBlur={() => handleShippingBlur("zipCode")}
+                    />
+                    <FloatingInput
+                      label="Country"
+                      name="country"
+                      value={shippingInfo.country}
+                      error={getShippingFieldError("country")}
+                      onChange={(e) =>
+                        handleInputChange("country", e.target.value)
+                      }
+                      onBlur={() => handleShippingBlur("country")}
+                    />
+                  </div>
+                  {showShippingErrors && !isShippingInfoComplete ? (
+                    <p className="text-sm text-red-500">
+                      Fill in all required shipping fields to continue.
+                    </p>
+                  ) : null}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-16">
                     <Button
                       size="lg"
@@ -287,7 +474,7 @@ const CheckoutPage: React.FC = () => {
                     </Button>
 
                     <Button
-                      onClick={() => setCurrentStep(2)}
+                      onClick={() => handleShippingStepContinue(2)}
                       disabled={isCheckoutBlocked}
                     >
                       Continue to Payment
@@ -339,17 +526,17 @@ const CheckoutPage: React.FC = () => {
 
                     <div
                       className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
-                        paymentMethod === "paypal"
+                        paymentMethod === "cod"
                           ? "border-primary/60 bg-primary/5"
                           : "border-gray-300"
                       }`}
-                      onClick={() => setPaymentMethod("paypal")}
+                      onClick={() => setPaymentMethod("cod")}
                     >
                       <div className="flex items-center space-x-3">
                         <input
                           type="radio"
-                          checked={paymentMethod === "paypal"}
-                          onChange={() => setPaymentMethod("paypal")}
+                          checked={paymentMethod === "cod"}
+                          onChange={() => setPaymentMethod("cod")}
                           className="text-green-500 focus:ring-green-500"
                         />
 
@@ -370,8 +557,8 @@ const CheckoutPage: React.FC = () => {
                     </Button>
                     <Button
                       size="lg"
-                      onClick={() => setCurrentStep(3)}
-                      disabled={isCheckoutBlocked}
+                      onClick={() => handleShippingStepContinue(3)}
+                      disabled={isCheckoutBlocked || !isShippingInfoComplete}
                     >
                       Review Order
                     </Button>
@@ -396,9 +583,16 @@ const CheckoutPage: React.FC = () => {
                       <br />
                       {shippingInfo.email}
                       <br />
-                      {shippingInfo.address}
+                      {shippingInfo.addressLine1}
                       <br />
-                      {shippingInfo.city}, {shippingInfo.zipCode}
+                      {shippingInfo.addressLine2 ? (
+                        <>
+                          {shippingInfo.addressLine2}
+                          <br />
+                        </>
+                      ) : null}
+                      {shippingInfo.city}, {shippingInfo.stateProvince}{" "}
+                      {shippingInfo.zipCode}
                       <br />
                       {shippingInfo.country}
                     </p>
@@ -409,7 +603,7 @@ const CheckoutPage: React.FC = () => {
                     <p className="text-gray-600">
                       {paymentMethod === "card"
                         ? "Credit/Debit Card (via Stripe)"
-                        : "PayPal"}
+                        : "Cash on Delivery"}
                     </p>
                   </div>
 
@@ -424,14 +618,26 @@ const CheckoutPage: React.FC = () => {
                     <Button
                       size="lg"
                       isArrow={false}
-                      disabled={isCheckoutBlocked}
+                      onClick={handleCompleteOrder}
+                      disabled={
+                        isCheckoutBlocked ||
+                        !isShippingInfoComplete ||
+                        isCreatingStripeCheckout
+                      }
                     >
                       <div className="flx gap-3">
                         <Lock className="w-4 h-4" />
-                        <span>Complete Order</span>
+                        <span>
+                          {isCreatingStripeCheckout
+                            ? "Redirecting..."
+                            : "Complete Order"}
+                        </span>
                       </div>
                     </Button>
                   </div>
+                  {checkoutError ? (
+                    <p className="text-sm text-red-500">{checkoutError}</p>
+                  ) : null}
                 </div>
               )}
             </div>
@@ -449,7 +655,13 @@ const CheckoutPage: React.FC = () => {
               <div className="space-y-4 mb-6">
                 {!isAuthenticated ? (
                   <p className="text-sm text-gray-500">
-                    Sign in to continue with checkout.
+                    <button
+                      onClick={() => dispatch(openAuthDialog())}
+                      className="text-primary underline"
+                    >
+                      Sign in
+                    </button>{" "}
+                    to continue with checkout.
                   </p>
                 ) : isLoading || isFetching ? (
                   <p className="text-sm text-gray-500">Loading cart items...</p>

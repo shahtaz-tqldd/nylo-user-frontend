@@ -8,15 +8,10 @@ import LinkButton from "@/components/buttons/link-button";
 import HeroProductCard from "./hero-product-card";
 
 import Link from "next/link";
-import { DEMO_PRODUCTS } from "@/templates/product-details/demo-data";
-import type { ProductProps } from "@/templates/product-details/types";
 import Title from "@/components/ui/title";
+import { Product } from "@/features/products/types";
 
-const Hero = () => {
-  const product_data: ProductProps | undefined = DEMO_PRODUCTS?.find(
-    (p) => p.is_hero_product
-  );
-
+const Hero = ({ product }: { product: Product }) => {
   return (
     <section className="relative w-full overflow-hidden bg-gradient-to-br from-[#DFF2EB] via-[#B9E5E8] to-[#DFF2EB]">
       <div
@@ -60,7 +55,7 @@ const Hero = () => {
                 group-hover:-translate-x-44 
                 group-hover:-translate-y-2
               "
-              product={product_data}
+              product={product}
             />
           </div>
 
@@ -68,13 +63,15 @@ const Hero = () => {
           <div className="md:hidden mb-6">
             <HeroProductCard
               className="static w-64 mx-auto"
-              product={product_data}
+              product={product}
             />
           </div>
 
           <Image
-            src={product_data?.image || "/placeholder.png"}
-            alt={product_data?.name || "Product image"}
+            src={product?.image_url || "/placeholder.png"}
+            alt={product?.title || "Product image"}
+            width={500}
+            height={500}
             className="
               h-[280px] w-[280px]
               sm:h-[350px] sm:w-[350px]

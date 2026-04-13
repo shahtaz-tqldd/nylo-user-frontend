@@ -22,6 +22,28 @@ export interface Product {
   tags?: string[];
   category?: ProductCategory;
   variants?: ProductVariant[];
+  offer_ends_at?: string;
+}
+
+export interface SignatureItem {
+  id: string;
+  product: Product;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface OfferItem {
+  id: string;
+  product: Product;
+  offer_ends_at?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface FeaturedItemsResponse {
+  signature_items: SignatureItem[];
+  offer_items: OfferItem[];
+  best_selling_products: Product[];
 }
 
 export interface ProductCategory {
@@ -94,18 +116,22 @@ export interface ProductListQueryParams {
   gender?: string[];
   size_ids?: string[];
   color_ids?: string[];
+  collection_ids?: string[];
   min_price?: number;
   max_price?: number;
 }
+export interface CollectionListQueryParams {
+  is_signature?: string;
+}
 
-export interface AddToCartPayload{
+export interface AddToCartPayload {
   product_id: string;
   variant_id?: string;
   action: string;
 }
 
 
-export interface AddToFavouritePayload{
+export interface AddToFavouritePayload {
   product_id: string;
   action: string;
 }

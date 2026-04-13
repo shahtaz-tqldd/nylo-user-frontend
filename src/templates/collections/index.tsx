@@ -1,12 +1,17 @@
 "use client";
-import Button from "@/components/buttons/primary-button";
 import React, { useState } from "react";
-import { COLLECTIONS } from "./demo-data";
+import Button from "@/components/buttons/primary-button";
 import Image from "next/image";
 import Title from "@/components/ui/title";
+import { useCollectionListQuery } from "@/features/products/productApiSlice";
+import { useRouter } from "next/navigation";
 
 export default function CollectionsPage() {
   const [hoveredId, setHoveredId] = useState<number | null>(null);
+  const { data } = useCollectionListQuery();
+  const router = useRouter();
+
+  const accentColors = ["#3b82f6", "#10b981", "#f59e0b", "#ec4899", "#8b5cf6"];
 
   return (
     <div className="min-h-screen pt-32 pb-16">
@@ -27,7 +32,7 @@ export default function CollectionsPage() {
 
         {/* Collections Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-20 mb-16">
-          {COLLECTIONS.map((collection, index) => {
+          {data?.data?.map((collection, index) => {
             const isHovered = hoveredId === collection.id;
 
             return (
@@ -36,12 +41,13 @@ export default function CollectionsPage() {
                 className="h-[640px] group relative overflow-hidden rounded-3xl cursor-pointer"
                 onMouseEnter={() => setHoveredId(collection.id)}
                 onMouseLeave={() => setHoveredId(null)}
+                onClick={() => router.push(`/shop?collection=${collection.slug}`)}
               >
                 {/* Background Image */}
                 <div className="absolute inset-0">
                   <Image
-                    src={collection.image}
-                    alt={collection.name}
+                    src={collection.image_url}
+                    alt={collection.title}
                     className="w-full h-full object-cover transition-transform duration-700"
                     style={{
                       transform: isHovered ? "scale(1.1)" : "scale(1)",
@@ -51,7 +57,7 @@ export default function CollectionsPage() {
                   />
                   {/* Gradient Overlay */}
                   <div
-                    className="absolute inset-0 bg-gradient-to-t from-black/90 to-transparent opacity-80 transition-opacity duration-500"
+                    className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent transition-opacity duration-500"
                     style={{
                       opacity: isHovered ? 0.9 : 0.75,
                     }}
@@ -63,10 +69,11 @@ export default function CollectionsPage() {
                   <div
                     className="px-4 py-1 rounded-full text-xs font-bold text-white backdrop-blur-sm transition-all duration-300"
                     style={{
-                      backgroundColor: collection.accentColor,
+                      backgroundColor:
+                        accentColors[index % accentColors.length],
                     }}
                   >
-                    {collection.tag}
+                    {collection.type}
                   </div>
                 </div>
 
@@ -82,7 +89,7 @@ export default function CollectionsPage() {
                       opacity: isHovered ? 1 : 0.8,
                     }}
                   >
-                    {collection.items}
+                    {collection.total_products} styles
                   </div>
 
                   {/* Collection Name */}
@@ -94,12 +101,12 @@ export default function CollectionsPage() {
                         : "translateY(0)",
                     }}
                   >
-                    {collection.name}
+                    {collection.title}
                   </h3>
 
                   {/* Tagline */}
                   <p className="!text-white/90 text-lg font-medium mb-4">
-                    {collection.tagline}
+                    {collection.subtitle}
                   </p>
 
                   {/* Description */}
@@ -146,7 +153,8 @@ export default function CollectionsPage() {
                   <div
                     className="h-1 mt-6 rounded-full transition-all duration-500"
                     style={{
-                      backgroundColor: collection.accentColor,
+                      backgroundColor:
+                        accentColors[index % accentColors.length],
                       width: isHovered ? "200px" : "60px",
                     }}
                   />
