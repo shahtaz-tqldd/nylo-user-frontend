@@ -3,8 +3,10 @@ import NavigateButton from "@/components/buttons/navigate-button";
 import TrendingProductCard from "./trending-product-card";
 import Title from "@/components/ui/title";
 import { Product } from "@/features/products/types";
+import { useRouter } from "next/navigation";
 
 const Trending = ({ products }: { products: Product[] }) => {
+  const router = useRouter();
   return (
     <section className="container pt-16 md:pt-24 pb-20 md:pb-36">
       <div className="grid grid-cols-1 md:grid-cols-5 items-center gap-12 md:gap-0">
@@ -47,7 +49,10 @@ const Trending = ({ products }: { products: Product[] }) => {
             Our latest collection combines comfort and cutting-edge design. Step
             up your style game with these top picks.
           </p>
-          <NavigateButton className="mt-8 md:mt-24 mx-auto md:mx-0">
+          <NavigateButton
+            onClick={() => router.push(`/shop`)}
+            className="mt-8 md:mt-24 mx-auto md:mx-0"
+          >
             Explore More
           </NavigateButton>
         </div>

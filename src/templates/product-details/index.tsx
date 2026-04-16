@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 import {
   Heart,
   Share2,
@@ -23,94 +24,258 @@ import Button from "@/components/buttons/primary-button";
 import Title from "@/components/ui/title";
 import {
   useAddToCartMutation,
-  useCartItemListQuery,
+  useAddToFavouriteMutation,
   useProductDetailsQuery,
 } from "@/features/products/productApiSlice";
-import { ProductColor, ProductVariantSize } from "@/features/products/types";
+import {
+  ProductColor,
+  ProductVariant,
+  ProductVariantSize,
+} from "@/features/products/types";
 import { useAppSelector } from "@/hooks/redux";
 import { cn } from "@/lib/utils";
 
-interface ImageGalleryProps {
-  images: string[];
-  productName: string;
+interface GalleryItem {
+  id: string;
+  image: string;
+  type: "product" | "variant";
+  variant?: ProductVariant;
+  label: string;
 }
 
-const ImageGallery = ({ images, productName }: ImageGalleryProps) => {
-  const [currentImage, setCurrentImage] = useState(0);
+interface ImageGalleryProps {
+  items: GalleryItem[];
+  productName: string;
+  isFavourite: boolean;
+  isFavouriteUpdating: boolean;
+  onFavouriteToggle: () => void;
+  activeImageId: string | null;
+  onImageChange: (item: GalleryItem) => void;
+}
 
-  useEffect(() => {
-    setCurrentImage(0);
-  }, [images]);
+const ImageGallery = ({
+  items,
+  productName,
+  isFavourite,
+  isFavouriteUpdating,
+  onFavouriteToggle,
+  activeImageId,
+  onImageChange,
+}: ImageGalleryProps) => {
+  const activeIndex = Math.max(
+    0,
+    items.findIndex((item) => item.id === activeImageId),
+  );
+  const activeItem = items[activeIndex] ?? items[0];
+
+  const handleSlide = (direction: "prev" | "next") => {
+    if (!items.length) {
+      return;
+    }
+
+    const nextIndex =
+      direction === "prev"
+        ? activeIndex === 0
+          ? items.length - 1
+          : activeIndex - 1
+        : activeIndex === items.length - 1
+          ? 0
+          : activeIndex + 1;
+
+    onImageChange(items[nextIndex]);
+  };
 
   return (
     <div className="space-y-4">
-      <div className="relative group">
-        <div className="relative aspect-square overflow-hidden rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100">
-          <img
-            src={images[currentImage]}
-            alt={productName}
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-          />
+      <div className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-slate-100 via-white to-gray-100">
+        <div className="relative aspect-square overflow-hidden rounded-[22px] bg-white">
+          <div
+            className="flex h-full transition-transform duration-500 ease-out"
+            style={{ transform: `translateX(-${activeIndex * 100}%)` }}
+          >
+            {items.map((item) => (
+              <div
+                key={item.id}
+                className="relative h-full min-w-full overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100"
+              >
+                <img
+                  src={item.image}
+                  alt={item.label || productName}
+                  className="h-full w-full object-cover"
+                />
+                <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent px-5 pb-5 pt-16">
+                  <div className="inline-flex rounded-full border border-white/20 bg-white/14 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.22em] text-white backdrop-blur-sm">
+                    {item.type === "variant" ? "Variant View" : "Product View"}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
           <div className="absolute right-4 top-4 flex gap-2">
-            <button className="rounded-full bg-white/85 p-2 backdrop-blur-sm transition-colors hover:bg-white">
-              <Heart className="h-4 w-4 text-gray-500" />
+            <button
+              onClick={onFavouriteToggle}
+              disabled={isFavouriteUpdating}
+              aria-label={
+                isFavourite
+                  ? "Remove product from favourites"
+                  : "Add product to favourites"
+              }
+              className={cn(
+                "rounded-full bg-white/85 p-2 backdrop-blur-sm transition-colors hover:bg-white disabled:cursor-not-allowed disabled:opacity-60",
+                isFavourite && "bg-red-600 text-white hover:bg-red-700 tr",
+              )}
+            >
+              <Heart
+                className={cn(
+                  "h-4 w-4",
+                  isFavourite ? "fill-current text-current" : "text-gray-500",
+                )}
+              />
             </button>
             <button className="rounded-full bg-white/85 p-2 backdrop-blur-sm transition-colors hover:bg-white">
               <Share2 className="h-4 w-4 text-gray-500" />
             </button>
           </div>
+
+          {items.length > 1 && (
+            <>
+              <button
+                onClick={() => handleSlide("prev")}
+                className="absolute left-4 top-1/2 z-10 -translate-y-1/2 rounded-full border border-white/60 bg-white/80 p-2.5 text-slate-700 shadow-lg backdrop-blur-sm transition hover:bg-white"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+              <button
+                onClick={() => handleSlide("next")}
+                className="absolute right-4 top-1/2 z-10 -translate-y-1/2 rounded-full border border-white/60 bg-white/80 p-2.5 text-slate-700 shadow-lg backdrop-blur-sm transition hover:bg-white"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
+            </>
+          )}
         </div>
 
-        {images.length > 1 && (
+        {items.length > 1 && (
           <>
-            <button
-              onClick={() =>
-                setCurrentImage((prev) =>
-                  prev === 0 ? images.length - 1 : prev - 1,
-                )
-              }
-              className="absolute left-4 top-1/2 rounded-full bg-white/90 p-2 opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100"
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </button>
-            <button
-              onClick={() =>
-                setCurrentImage((prev) =>
-                  prev === images.length - 1 ? 0 : prev + 1,
-                )
-              }
-              className="absolute right-4 top-1/2 rounded-full bg-white/90 p-2 opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100"
-            >
-              <ChevronRight className="h-5 w-5" />
-            </button>
+            <div className="p-4 flex items-center justify-between gap-3">
+              <div>
+                <p className="mt-1 text-sm font-medium text-slate-700">
+                  {activeItem?.label ?? productName}
+                </p>
+              </div>
+              <div className="flex items-center gap-1.5">
+                {items.map((item, index) => (
+                  <button
+                    key={item.id}
+                    onClick={() => onImageChange(item)}
+                    className={cn(
+                      "h-2 rounded-full transition-all",
+                      index === activeIndex
+                        ? "w-7 bg-slate-900"
+                        : "w-2 bg-slate-300 hover:bg-slate-400",
+                    )}
+                    aria-label={`Show ${item.label}`}
+                  />
+                ))}
+              </div>
+            </div>
           </>
         )}
       </div>
 
-      {images.length > 1 && (
-        <div className="flex gap-2 overflow-x-auto pb-2">
-          {images.map((image, index) => (
+      {items.length > 0 && (
+        <div className="flex gap-3 overflow-x-auto pb-2">
+          {items.map((item, index) => (
             <button
-              key={`${image}-${index}`}
-              onClick={() => setCurrentImage(index)}
+              key={item.id}
+              onClick={() => onImageChange(item)}
               className={cn(
-                "h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg border-2 transition-all",
-                currentImage === index
-                  ? "border-green-600"
+                "group relative w-[88px] flex-shrink-0 overflow-hidden rounded-2xl border bg-white text-left transition-all",
+                index === activeIndex
+                  ? "border-slate-900"
                   : "border-gray-200 hover:border-gray-300",
               )}
             >
-              <img
-                src={image}
-                alt={`${productName} ${index + 1}`}
-                className="h-full w-full object-cover"
-              />
+              <div className="aspect-square overflow-hidden">
+                <img
+                  src={item.image}
+                  alt={item.label}
+                  className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                />
+              </div>
             </button>
           ))}
         </div>
       )}
     </div>
   );
+};
+
+const getVariantLabel = (variant: ProductVariant) => {
+  const parts = [variant.color.name, variant.size.name].filter(Boolean);
+
+  if (parts.length) {
+    return parts.join(" / ");
+  }
+
+  return variant.sku || "Variant";
+};
+
+const buildGalleryItems = (
+  productImage: string | null | undefined,
+  variants: ProductVariant[],
+) => {
+  const items: GalleryItem[] = [];
+
+  if (productImage) {
+    items.push({
+      id: "product-image",
+      image: productImage,
+      type: "product",
+      label: "Main product image",
+    });
+  }
+
+  variants.forEach((variant) => {
+    if (!variant.image_url) {
+      return;
+    }
+
+    items.push({
+      id: `variant-${variant.id}`,
+      image: variant.image_url,
+      type: "variant",
+      variant,
+      label: getVariantLabel(variant),
+    });
+  });
+
+  return items.length
+    ? items
+    : [
+        {
+          id: "product-fallback",
+          image: "https://placehold.co/800x800?text=Product",
+          type: "product" as const,
+          label: "Product image",
+        },
+      ];
+};
+
+const getGalleryItemIdForVariant = (
+  variant: ProductVariant | null,
+  items: GalleryItem[],
+) => {
+  if (!variant) {
+    return items[0]?.id ?? null;
+  }
+
+  const matchingItem = items.find(
+    (item) => item.type === "variant" && item.variant?.id === variant.id,
+  );
+
+  return matchingItem?.id ?? items[0]?.id ?? null;
 };
 
 interface ColorSelectorProps {
@@ -394,10 +559,9 @@ const ProductDetailsPage = ({ productSlug }: { productSlug: string }) => {
   const router = useRouter();
   const { isAuthenticated } = useAppSelector((state) => state.auth);
   const { data, isLoading, isError } = useProductDetailsQuery(productSlug);
-  const { data: cartItemsResponse } = useCartItemListQuery(undefined, {
-    skip: !isAuthenticated,
-  });
   const [addToCart, { isLoading: isCartUpdating }] = useAddToCartMutation();
+  const [addToFavourite, { isLoading: isFavouriteUpdating }] =
+    useAddToFavouriteMutation();
   const product = data?.data;
 
   const variants = product?.variants ?? [];
@@ -420,7 +584,11 @@ const ProductDetailsPage = ({ productSlug }: { productSlug: string }) => {
   const [selectedColorId, setSelectedColorId] = useState<string | null>(null);
   const [selectedSizeId, setSelectedSizeId] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
-  const [cartFeedback, setCartFeedback] = useState<string | null>(null);
+  const [variantCartState, setVariantCartState] = useState<
+    Record<string, { isInCart: boolean; quantity: number }>
+  >({});
+  const [isFavourite, setIsFavourite] = useState(false);
+  const [activeImageId, setActiveImageId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!product) {
@@ -434,8 +602,25 @@ const ProductDetailsPage = ({ productSlug }: { productSlug: string }) => {
     setSelectedSizeId(
       firstVariant?.size.id ?? product.variants?.[0]?.size.id ?? null,
     );
-    setQuantity(1);
   }, [product]);
+
+  useEffect(() => {
+    setIsFavourite(Boolean(product?.added_to_favourite));
+  }, [product?.added_to_favourite, product?.id]);
+
+  useEffect(() => {
+    const nextState = variants.reduce<
+      Record<string, { isInCart: boolean; quantity: number }>
+    >((acc, variant) => {
+      acc[variant.id] = {
+        isInCart: Boolean(variant.added_to_cart),
+        quantity: Math.max(variant.cart_quantity ?? 0, 0),
+      };
+      return acc;
+    }, {});
+
+    setVariantCartState(nextState);
+  }, [variants]);
 
   const filteredVariants = variants.filter((variant) => {
     if (!variant.is_active) {
@@ -472,6 +657,10 @@ const ProductDetailsPage = ({ productSlug }: { productSlug: string }) => {
         variant.color.id === selectedColorId &&
         variant.size.id === selectedSizeId,
     ) ?? null;
+  const galleryItems = buildGalleryItems(
+    product?.image_url,
+    variants.filter((variant) => variant.is_active),
+  );
 
   const stockCount = selectedVariant?.stock ?? product?.total_stock ?? 0;
   const comparePrice = Number(product?.compare_price ?? product?.price ?? 0);
@@ -480,34 +669,23 @@ const ProductDetailsPage = ({ productSlug }: { productSlug: string }) => {
   const savingsPercentage =
     comparePrice > 0 ? Math.round((savings / comparePrice) * 100) : 0;
 
-  const images = Array.from(
-    new Set(
-      [selectedVariant?.image_url, product?.image_url].filter(
-        (image): image is string => Boolean(image),
-      ),
-    ),
-  );
-
-  const cartItems = cartItemsResponse?.data ?? [];
   const selectedProductId = product?.id ? String(product.id) : null;
-  const selectedVariantId = selectedVariant?.id ? String(selectedVariant.id) : null;
-
-  const cartItem = cartItems.find((item) => {
-    const itemProductId = item.product_id ?? item.product?.id ?? item.id;
-    const itemVariantId = item.variant_id ?? item.variant?.id ?? null;
-
-    if (!selectedProductId || String(itemProductId) !== selectedProductId) {
-      return false;
-    }
-
-    if (selectedVariantId) {
-      return String(itemVariantId) === selectedVariantId;
-    }
-
-    return true;
-  });
-
-  const isInCart = Boolean(cartItem);
+  const selectedVariantId = selectedVariant?.id
+    ? String(selectedVariant.id)
+    : null;
+  const selectedVariantState = selectedVariantId
+    ? variantCartState[selectedVariantId]
+    : undefined;
+  const isSelectedVariantInCart = selectedVariant
+    ? (selectedVariantState?.isInCart ?? Boolean(selectedVariant.added_to_cart))
+    : Boolean(product?.added_to_cart);
+  const selectedVariantCartQuantity = selectedVariant
+    ? Math.max(
+        selectedVariantState?.quantity ?? selectedVariant.cart_quantity ?? 0,
+        0,
+      )
+    : 0;
+  const maxSelectableQuantity = Math.max(1, Math.min(stockCount || 1, 10));
   const actionMessage =
     stockCount < 1
       ? "This product is currently out of stock."
@@ -515,40 +693,187 @@ const ProductDetailsPage = ({ productSlug }: { productSlug: string }) => {
         ? null
         : "Select an available color and size first.";
   const canSubmitCartAction = !actionMessage && Boolean(selectedProductId);
+  const hasCartQuantityChanged =
+    isSelectedVariantInCart && selectedVariantCartQuantity > 0
+      ? quantity !== selectedVariantCartQuantity
+      : false;
+
+  useEffect(() => {
+    const nextQuantity =
+      isSelectedVariantInCart && selectedVariantCartQuantity > 0
+        ? selectedVariantCartQuantity
+        : 1;
+
+    setQuantity(Math.min(Math.max(nextQuantity, 1), maxSelectableQuantity));
+  }, [
+    isSelectedVariantInCart,
+    maxSelectableQuantity,
+    selectedVariant?.id,
+    selectedVariantCartQuantity,
+  ]);
+
+  useEffect(() => {
+    setActiveImageId(getGalleryItemIdForVariant(selectedVariant, galleryItems));
+  }, [selectedVariant?.id, product?.id]);
+
+  const showActionToast = ({
+    title,
+    description,
+    type,
+  }: {
+    title: string;
+    description: string;
+    type: "success" | "error";
+  }) => {
+    toast.custom(
+      (t) => (
+        <div
+          className={cn(
+            "pointer-events-auto flex min-w-[320px] items-start gap-3 rounded-[18px] border px-4 py-3 text-sm shadow-2xl backdrop-blur-xl transition-all",
+            t.visible ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0",
+            type === "success"
+              ? "border-emerald-200 bg-gradient-to-br from-white via-emerald-50 to-emerald-100/80"
+              : "border-rose-200 bg-gradient-to-br from-white via-rose-50 to-orange-50",
+          )}
+        >
+          <div
+            className={cn(
+              "mt-0.5 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full",
+              type === "success"
+                ? "bg-emerald-600 text-white"
+                : "bg-rose-500 text-white",
+            )}
+          >
+            {type === "success" ? (
+              <Check className="h-4 w-4" />
+            ) : (
+              <TrafficCone className="h-4 w-4" />
+            )}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="font-semibold text-slate-900">{title}</p>
+            <p className="mt-0.5 text-slate-600">{description}</p>
+          </div>
+        </div>
+      ),
+      { duration: type === "success" ? 2600 : 3400 },
+    );
+  };
 
   const handleCartAction = async (action: "add" | "remove") => {
     if (!canSubmitCartAction || !selectedProductId) {
-      setCartFeedback(actionMessage);
+      showActionToast({
+        title: "Selection required",
+        description: actionMessage ?? "Select an available option first.",
+        type: "error",
+      });
       return false;
     }
 
     try {
-      setCartFeedback(null);
       const response = await addToCart({
         product_id: selectedProductId,
         variant_id: selectedVariantId ?? undefined,
+        quantity:
+          action === "add"
+            ? quantity
+            : Math.max(selectedVariantCartQuantity, quantity, 1),
         action,
       }).unwrap();
 
-      setCartFeedback(response.message ?? null);
+      if (selectedVariantId) {
+        setVariantCartState((prev) => ({
+          ...prev,
+          [selectedVariantId]: {
+            isInCart: action === "add",
+            quantity: action === "add" ? quantity : 0,
+          },
+        }));
+      }
+
+      showActionToast({
+        title:
+          action === "add"
+            ? isSelectedVariantInCart
+              ? "Cart updated"
+              : "Added to cart"
+            : "Removed from cart",
+        description:
+          response.message ??
+          (action === "add"
+            ? "This variant is now ready for checkout."
+            : "This product was removed from your cart."),
+        type: "success",
+      });
       return Boolean(response.success);
     } catch (error) {
       console.error(`Cart ${action} failed:`, error);
-      setCartFeedback(
-        isAuthenticated
+      showActionToast({
+        title: isAuthenticated ? "Cart update failed" : "Sign in required",
+        description: isAuthenticated
           ? `Unable to ${action === "add" ? "update" : "remove"} this item right now.`
           : "Please sign in to manage your cart.",
-      );
+        type: "error",
+      });
       return false;
     }
   };
 
+  const handleFavouriteToggle = async () => {
+    if (!selectedProductId) {
+      return;
+    }
+
+    const action = isFavourite ? "remove" : "add";
+
+    try {
+      const response = await addToFavourite({
+        product_id: selectedProductId,
+        action,
+      }).unwrap();
+
+      setIsFavourite(action === "add");
+      showActionToast({
+        title:
+          action === "add" ? "Saved to favourites" : "Removed from favourites",
+        description:
+          response.message ??
+          (action === "add"
+            ? "You can find this product in your favourites later."
+            : "This product was removed from your favourites."),
+        type: "success",
+      });
+    } catch (error) {
+      console.error(`Favourite ${action} failed:`, error);
+      showActionToast({
+        title: isAuthenticated ? "Favourite update failed" : "Sign in required",
+        description: isAuthenticated
+          ? "Unable to update your favourites right now."
+          : "Please sign in to manage your favourites.",
+        type: "error",
+      });
+    }
+  };
+
+  const handleVariantChange = (variant: ProductVariant) => {
+    setSelectedColorId(variant.color.id);
+    setSelectedSizeId(variant.size.id);
+  };
+
+  const handleGalleryImageChange = (item: GalleryItem) => {
+    setActiveImageId(item.id);
+
+    if (item.type === "variant" && item.variant) {
+      handleVariantChange(item.variant);
+    }
+  };
+
   const handleAddToCartClick = async () => {
-    await handleCartAction(isInCart ? "remove" : "add");
+    await handleCartAction("add");
   };
 
   const handleBuyNowClick = async () => {
-    if (!isInCart) {
+    if (!isSelectedVariantInCart || hasCartQuantityChanged) {
       const added = await handleCartAction("add");
       if (!added) {
         return;
@@ -586,12 +911,13 @@ const ProductDetailsPage = ({ productSlug }: { productSlug: string }) => {
           </div>
 
           <ImageGallery
-            images={
-              images.length
-                ? images
-                : ["https://placehold.co/800x800?text=Product"]
-            }
+            items={galleryItems}
             productName={product.title ?? "Product"}
+            isFavourite={isFavourite}
+            isFavouriteUpdating={isFavouriteUpdating}
+            onFavouriteToggle={handleFavouriteToggle}
+            activeImageId={activeImageId}
+            onImageChange={handleGalleryImageChange}
           />
 
           <ProductSpecifications
@@ -681,7 +1007,7 @@ const ProductDetailsPage = ({ productSlug }: { productSlug: string }) => {
           <QuantitySelector
             quantity={quantity}
             onQuantityChange={setQuantity}
-            max={Math.max(1, Math.min(stockCount || 1, 10))}
+            max={maxSelectableQuantity}
           />
 
           <div className="grid grid-cols-1 gap-4 pt-4 md:grid-cols-2">
@@ -695,8 +1021,8 @@ const ProductDetailsPage = ({ productSlug }: { productSlug: string }) => {
                 <ShoppingCart className="h-5 w-5" />
                 {isCartUpdating
                   ? "Updating..."
-                  : isInCart
-                    ? "Remove from Cart"
+                  : isSelectedVariantInCart
+                    ? "Update Cart"
                     : "Add to Cart"}
               </div>
             </Button>
@@ -709,14 +1035,13 @@ const ProductDetailsPage = ({ productSlug }: { productSlug: string }) => {
             </Button>
           </div>
 
-          {actionMessage || cartFeedback ? (
-            <p
-              className={cn(
-                "text-sm",
-                actionMessage ? "text-red-500" : "text-gray-600",
-              )}
-            >
-              {actionMessage ?? cartFeedback}
+          {actionMessage ? (
+            <p className="text-sm text-red-500">{actionMessage}</p>
+          ) : isSelectedVariantInCart ? (
+            <p className="text-sm text-emerald-700">
+              {selectedVariantCartQuantity} item
+              {selectedVariantCartQuantity === 1 ? "" : "s"} of this variant in
+              your cart.
             </p>
           ) : null}
 

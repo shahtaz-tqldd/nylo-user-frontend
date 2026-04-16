@@ -27,8 +27,8 @@ const Details = () => {
               item.textPosition === "top"
                 ? "justify-between pb-0"
                 : item.textPosition === "side"
-                ? "gap-6 justify-between"
-                : "pt-0"
+                  ? "gap-6 justify-between"
+                  : "pt-0"
             }`}
           >
             {/* Conditionally render Text */}
@@ -43,36 +43,10 @@ const Details = () => {
               height={400}
               width={400}
               className={`z-10 ${
-                item.textPosition === "side"
-                  ? "ml-auto"
-                  : item.textPosition === "top"
-                  ? ""
-                  : "pt-8 mr-auto"
+               "mx-auto pt-4" 
               }`}
               style={{ width: item.imageWidth }}
             />
-
-            {/* SVG */}
-            <svg
-              className={`absolute ${
-                item.textPosition === "top"
-                  ? "top-28 -translate-x-1/4"
-                  : item.textPosition === "side"
-                  ? "top-28 left-0"
-                  : "translate-y-48 left-1/2 -translate-x-1/2"
-              }`}
-              width="200"
-              height="200"
-              viewBox="0 0 200 200"
-            >
-              <path
-                d={item.svgPath}
-                stroke="rgb(148 163 184)"
-                strokeWidth="1.5"
-                fill="none"
-                strokeLinecap="round"
-              />
-            </svg>
 
             {/* Conditionally render Text */}
             {item.textPosition === "bottom" && (
@@ -90,8 +64,8 @@ const Details = () => {
                 index === 0
                   ? "-top-48 -left-48"
                   : index === 1
-                  ? "-bottom-48 -left-48"
-                  : "-top-48 -right-48"
+                    ? "-bottom-48 -left-48"
+                    : "-top-48 -right-48"
               }`}
             >
               <div

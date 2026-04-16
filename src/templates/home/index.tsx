@@ -16,14 +16,19 @@ import { useFeaturedItemsQuery } from "@/features/products/productApiSlice";
 const Homepage = () => {
   const { data } = useFeaturedItemsQuery();
 
+  const bestSellingProducts = data?.data?.best_selling_products || [];
+  const offerItems = data?.data?.offer_items || [];
+
   return (
     <React.Fragment>
       <Hero product={data?.data?.signature_items[0]?.product} />
       <NewArrivals />
       <NewCollections />
-      <Trending products={data?.data?.best_selling_products || []} />
+      {bestSellingProducts.length > 0 && (
+        <Trending products={bestSellingProducts} />
+      )}
       <Details />
-      <HotDeals products={data?.data?.offer_items || []} />
+      {offerItems.length > 0 && <HotDeals products={offerItems} />}
     </React.Fragment>
   );
 };

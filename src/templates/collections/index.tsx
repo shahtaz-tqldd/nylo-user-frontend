@@ -33,21 +33,23 @@ export default function CollectionsPage() {
         {/* Collections Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-20 mb-16">
           {data?.data?.map((collection, index) => {
-            const isHovered = hoveredId === collection.id;
+            const isHovered = hoveredId === index;
 
             return (
               <div
                 key={index}
                 className="h-[640px] group relative overflow-hidden rounded-3xl cursor-pointer"
-                onMouseEnter={() => setHoveredId(collection.id)}
+                onMouseEnter={() => setHoveredId(index)}
                 onMouseLeave={() => setHoveredId(null)}
-                onClick={() => router.push(`/shop?collection=${collection.slug}`)}
+                onClick={() =>
+                  router.push(`/shop?collection=${collection.slug}`)
+                }
               >
                 {/* Background Image */}
                 <div className="absolute inset-0">
                   <Image
-                    src={collection.image_url}
-                    alt={collection.title}
+                    src={collection.image_url || "/placeholder.jpg"}
+                    alt={collection.title || "Collection Image"}
                     className="w-full h-full object-cover transition-transform duration-700"
                     style={{
                       transform: isHovered ? "scale(1.1)" : "scale(1)",
@@ -106,7 +108,7 @@ export default function CollectionsPage() {
 
                   {/* Tagline */}
                   <p className="!text-white/90 text-lg font-medium mb-4">
-                    {collection.subtitle}
+                    {collection?.subtitle || ""}
                   </p>
 
                   {/* Description */}
@@ -178,7 +180,11 @@ export default function CollectionsPage() {
               <Button size="md" className="w-60" variant="accent">
                 Chat with Assistance
               </Button>
-              <Button size="md" className="w-60">
+              <Button
+                onClick={() => router.push(`/shop`)}
+                size="md"
+                className="w-60"
+              >
                 View All Products
               </Button>
             </div>

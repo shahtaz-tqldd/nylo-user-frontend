@@ -1,8 +1,9 @@
 "use client";
 import Image from "next/image";
 import React, { useEffect, useRef, useState } from "react";
-import { colorMap, DETAILS_DATA } from "./data";
+import { colorMap } from "./data";
 import Title from "@/components/ui/title";
+import { DETAILS_DATA } from "@/templates/home/details/demo-data";
 
 export default function DetailsBanner() {
   const [activeIndex, setActiveIndex] = useState<number>(0);
@@ -25,7 +26,7 @@ export default function DetailsBanner() {
         {
           threshold: 0.5,
           rootMargin: "-100px 0px -100px 0px",
-        }
+        },
       );
 
       observer.observe(ref);

@@ -40,7 +40,9 @@ const Hero = ({ product }: { product: Product }) => {
             <Link href="/shop">
               <Button>Shop Now</Button>
             </Link>
-            <LinkButton className="h-fit">Explore Collection</LinkButton>
+            <LinkButton link="/collections" className="h-fit">
+              Explore Collection
+            </LinkButton>
           </div>
         </div>
 

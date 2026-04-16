@@ -64,6 +64,7 @@ export default function CartDrawer() {
       await addToCart({
         product_id: String(productId),
         variant_id: item.variant?.id ? String(item.variant.id) : undefined,
+        quantity: item.quantity ?? 1,
         action: "remove",
       }).unwrap();
     } catch (error) {

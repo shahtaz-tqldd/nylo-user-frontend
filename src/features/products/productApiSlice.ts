@@ -10,6 +10,7 @@ import type {
   FavouriteItem,
   CollectionListQueryParams,
   FeaturedItemsResponse,
+  Collection,
 } from "./types";
 
 export const productApiSlice = apiSlice.injectEndpoints({
@@ -108,7 +109,7 @@ export const productApiSlice = apiSlice.injectEndpoints({
       invalidatesTags: ["products"],
     }),
 
-    favouriteItemList: builder.query<ApiResponse<Product[]>, void>({
+    favouriteItemList: builder.query<ApiResponse<FavouriteItem[]>, void>({
       query: () => {
         return {
           url: `/products/user/favourite-item-list/`,
@@ -119,7 +120,7 @@ export const productApiSlice = apiSlice.injectEndpoints({
     }),
 
     // collection
-    collectionList: builder.query<ApiResponse<Product[]>, CollectionListQueryParams | void>({
+    collectionList: builder.query<ApiResponse<Collection[]>, CollectionListQueryParams | void>({
       query: (params) => {
         const searchParams = new URLSearchParams();
 

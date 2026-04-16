@@ -23,6 +23,8 @@ export interface Product {
   category?: ProductCategory;
   variants?: ProductVariant[];
   offer_ends_at?: string;
+  added_to_cart?: boolean;
+  added_to_favourite?: boolean;
 }
 
 export interface SignatureItem {
@@ -80,6 +82,8 @@ export interface ProductVariant {
   is_active: boolean;
   created_at: string;
   updated_at: string;
+  added_to_cart?: boolean;
+  cart_quantity?: number;
 }
 
 export interface ProductGender {
@@ -120,6 +124,17 @@ export interface ProductListQueryParams {
   min_price?: number;
   max_price?: number;
 }
+export interface Collection {
+  id: string;
+  title: string;
+  subtitle: string;
+  type: string;
+  description: string;
+  image_url: string | null;
+  slug: string;
+  total_products?: number;
+}
+
 export interface CollectionListQueryParams {
   is_signature?: string;
 }
@@ -127,6 +142,7 @@ export interface CollectionListQueryParams {
 export interface AddToCartPayload {
   product_id: string;
   variant_id?: string;
+  quantity: number;
   action: string;
 }
 
