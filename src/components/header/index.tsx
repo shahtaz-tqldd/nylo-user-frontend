@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { Cart } from "@/assets/algo-icons";
 import IconButton from "@/components/buttons/icon-button";
 import Image from "next/image";
 import { User } from "lucide-react";
@@ -14,9 +13,14 @@ import { useAppSelector } from "@/hooks/redux";
 
 const Header = () => {
   const router = useRouter();
-  const [cartOpen, setCartOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const { isAuthenticated } = useAppSelector((state) => state.auth);
+  const { config, isLoading, hasRemoteConfig } = useAppSelector(
+    (state) => state.store,
+  );
+
+  const logoSrc = config.logo || "/logo.png";
+  const showConfigLoading = isLoading && !hasRemoteConfig;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -37,19 +41,18 @@ const Header = () => {
       }`}
     >
       <div className="container mx-auto px-6 py-2 flex items-center justify-between">
-        {/* Logo */}
-        <Link href="/" className="flx gap-1">
-          <span className="text-3xl font-black text-primary">nyLo</span>
+        <Link href="/" className="flx gap-3" aria-busy={showConfigLoading}>
           <Image
-            src="/logo.png"
-            height={200}
-            width={200}
-            className="h-10 w-10 object-contain"
-            alt="logo"
+            src={logoSrc}
+            height={40}
+            width={40}
+            className={`h-10 w-10 object-contain transition-opacity ${
+              showConfigLoading ? "opacity-80" : "opacity-100"
+            }`}
+            alt={`${config.name} logo`}
           />
         </Link>
 
-        {/* Navigation */}
         <div className="flx gap-8">
           <nav className="hidden md:flex items-center gap-10">
             {NAV_LINKS.map((link) => (

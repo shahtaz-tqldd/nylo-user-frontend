@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { Provider } from "react-redux";
 import { Toaster } from "react-hot-toast";
 import useAuth from "@/hooks/useAuth";
+import StoreConfigBootstrap from "@/features/store/storeConfigBootstrap";
 import { store } from "@/store";
 
 const AuthBootstrap = ({ children }: { children: ReactNode }) => {
@@ -16,6 +17,7 @@ export default function AppProviders({ children }: { children: ReactNode }) {
   return (
     <Provider store={store}>
       <AuthBootstrap>
+        <StoreConfigBootstrap />
         {children}
         <Toaster
           position="bottom-center"
