@@ -115,7 +115,7 @@ export default function ChatAssistance() {
           </div>
           <button
             onClick={toggleChat}
-            className="p-1 hover:bg-emerald-800 rounded-full transition-colors"
+            className="p-1 hover:bg-black/10 rounded-full transition-colors"
           >
             <X size={24} />
           </button>

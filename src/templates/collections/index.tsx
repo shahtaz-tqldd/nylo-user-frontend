@@ -22,7 +22,7 @@ export default function CollectionsPage() {
             Explore Our Range
           </p>
           <Title>
-            Curated <span className="text-emerald-500">Collections</span>
+            Curated <span className="text-primary">Collections</span>
           </Title>
           <p className="text-gray-600 text-lg">
             Each collection tells a unique story. Find the perfect pair that

@@ -14,7 +14,7 @@ const Details = () => {
         Why choose us
       </p>
       <Title className="mt-2 text-center">
-        Details Down to <span className="text-emerald-500">Sneaker Level</span>
+        Details Down to <span className="text-primary">Sneaker Level</span>
       </Title>
 
       <div className="container grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 relative z-10 mt-12">

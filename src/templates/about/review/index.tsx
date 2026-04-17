@@ -14,7 +14,7 @@ export default function Reviews() {
           Testimonials
         </p>
         <Title className="mt-2">
-          What Our <span className="text-emerald-500">Customers</span> Say
+          What Our <span className="text-primary">Customers</span> Say
         </Title>
       </div>
 
@@ -61,8 +61,10 @@ export default function Reviews() {
                 </div>
                 {/* Accent line */}
                 <div
-                  className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-400 to-teal-400 transition-all duration-500"
+                  className="absolute top-0 left-0 right-0 h-1 transition-all duration-500"
                   style={{
+                    background:
+                      "linear-gradient(90deg, var(--theme-primary), color-mix(in srgb, var(--theme-primary) 40%, var(--theme-accent)))",
                     opacity: isHovered ? 1 : 0,
                     transform: isHovered ? "scaleX(1)" : "scaleX(0)",
                   }}

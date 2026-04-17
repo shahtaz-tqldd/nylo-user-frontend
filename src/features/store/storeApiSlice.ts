@@ -10,7 +10,34 @@ export const storeApiSlice = apiSlice.injectEndpoints({
         method: "GET",
       }),
     }),
+
+    legalContent: builder.query({
+      query: () => ({
+        url: `/shop/legal-content/`,
+        method: "GET",
+      })
+    }),
+
+    aboutPageContent: builder.query({
+      query: () => ({
+        url: `/shop/about-page/`,
+        method: "GET",
+      }),
+    }),
+
+    faqList: builder.query({
+      query: () => ({
+        url: `/shop/faqs/`,
+        method: "GET",
+      }),
+    }),
+
   }),
 });
 
-export const { useStoreConfigQuery } = storeApiSlice;
+export const {
+  useStoreConfigQuery,
+  useAboutPageContentQuery,
+  useLegalContentQuery,
+  useFaqListQuery
+} = storeApiSlice;

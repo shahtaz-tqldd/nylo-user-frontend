@@ -42,7 +42,7 @@ export default function ContactUsPage() {
             Get in Touch
           </p>
           <Title>
-            We'd <span className="text-emerald-500">Love to Hear</span> From You
+            We'd <span className="text-primary">Love to Hear</span> From You
           </Title>
           <p className="text-gray-600 text-lg">
             Have a question about our products or need assistance? Our team is
@@ -69,7 +69,7 @@ export default function ContactUsPage() {
                       {info.link ? (
                         <a
                           href={info.link}
-                          className="text-gray-900 hover:text-emerald-500 transition-colors duration-300"
+                          className="text-gray-900 hover:text-primary transition-colors duration-300"
                         >
                           {info.value}
                         </a>

@@ -125,10 +125,7 @@ const HotDeals = ({ products }: { products: OfferItem[] }) => {
 
                   <div className="flex flex-col sm:flex-row items-center justify-center md:justify-start gap-2 sm:gap-4 mb-6">
                     <span
-                      className={clsx(
-                        "text-3xl font-bold",
-                        index % 2 === 0 ? "text-indigo-900" : "text-teal-900",
-                      )}
+                      className="text-3xl font-bold text-secondary"
                     >
                       ${price.toFixed(2)}
                     </span>

@@ -16,7 +16,7 @@ export default function LinkButton({
     <Link
       href={link}
       className={`
-        relative inline-block text-teal-900 font-semibold text-lg
+        relative inline-block text-secondary font-semibold text-lg
         after:content-[''] after:absolute after:left-0 after:bottom-0
         after:w-full after:h-[2px] after:bg-current
         after:scale-x-0 after:origin-left

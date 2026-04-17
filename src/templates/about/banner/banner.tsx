@@ -3,11 +3,22 @@ import Image from "next/image";
 import React, { useEffect, useRef, useState } from "react";
 import { colorMap } from "./data";
 import Title from "@/components/ui/title";
-import { DETAILS_DATA } from "@/templates/home/details/demo-data";
 
-export default function DetailsBanner() {
+interface DetailItem {
+  image: string;
+  title: string;
+  number: string;
+}
+
+interface DetailsBannerProps {
+  title: string;
+  items: DetailItem[];
+}
+
+export default function DetailsBanner({ title, items }: DetailsBannerProps) {
   const [activeIndex, setActiveIndex] = useState<number>(0);
   const sectionRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const paletteKeys = Object.keys(colorMap) as Array<keyof typeof colorMap>;
 
   useEffect(() => {
     const observers: IntersectionObserver[] = [];
@@ -45,17 +56,14 @@ export default function DetailsBanner() {
         <p className="text-sm uppercase tracking-[3px] text-gray-400 mb-4">
           Why Choose Us
         </p>
-        <Title>
-          Details Down to{" "}
-          <span className="text-emerald-500">Sneaker Level</span>
-        </Title>
+        <Title>{title}</Title>
       </div>
 
       <div className="">
-        {DETAILS_DATA.map((item, index) => {
+        {items.map((item, index) => {
           const isActive = activeIndex === index;
           const isEven = index % 2 === 0;
-          const colors = colorMap[item.color];
+          const colors = colorMap[paletteKeys[index % paletteKeys.length]];
 
           return (
             <div
@@ -104,8 +112,8 @@ export default function DetailsBanner() {
                   />
 
                   <Image
-                    src={item.img}
-                    alt="sneaker"
+                    src={item.image}
+                    alt={item.title}
                     className="relative z-10 w-[320px] h-[320px] object-contain drop-shadow-2xl"
                     height={400}
                     width={400}
@@ -154,7 +162,7 @@ export default function DetailsBanner() {
                         : "translateY(0)",
                     }}
                   >
-                    {item.text}
+                    {item.title}
                   </p>
 
                   <div

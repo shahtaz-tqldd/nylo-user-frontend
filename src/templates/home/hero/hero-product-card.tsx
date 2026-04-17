@@ -32,7 +32,7 @@ const HeroProductCard = ({ className, product }: HeroProductCardProps) => {
       {/* Color Options */}
       <div className="flex gap-2 mb-5">
         <div className="w-5 h-5 rounded-full bg-red-500 border-3 border-white" />
-        <div className="w-5 h-5 rounded-full bg-green-500 border-3 border-white" />
+        <div className="w-5 h-5 rounded-full bg-primary border-3 border-white" />
         <div className="w-5 h-5 rounded-full bg-blue-500 border-3 border-white" />
       </div>
 

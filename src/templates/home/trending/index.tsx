@@ -42,7 +42,7 @@ const Trending = ({ products }: { products: Product[] }) => {
             pick the bestseller
           </p>
           <Title>
-            Discover Our <span className="text-emerald-500">Trending</span>{" "}
+            Discover Our <span className="text-primary">Trending</span>{" "}
             Shoes
           </Title>
           <p className="text-xl md:text-2xl max-w-md mx-auto md:mx-0">

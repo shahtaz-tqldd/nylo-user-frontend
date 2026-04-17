@@ -46,7 +46,13 @@ const Footer = () => {
 
   return (
     <footer className="relative overflow-hidden" aria-busy={showConfigLoading}>
-      <div className="absolute inset-0 bg-gradient-to-br from-[#DFF2EB] via-[#B9E5E8] to-[#DFF2EB] opacity-40 blur-3xl pointer-events-none" />
+      <div
+        className="absolute inset-0 opacity-70 blur-3xl pointer-events-none"
+        style={{
+          background:
+            "linear-gradient(135deg, var(--theme-primary-soft), var(--theme-surface-strong), var(--theme-accent-soft))",
+        }}
+      />
 
       <div
         className="relative z-10 container px-6 py-16 
@@ -55,7 +61,7 @@ const Footer = () => {
         <div className="max-w-md flex flex-col justify-between gap-10 text-center md:text-left">
           <div>
             <h4
-              className={`text-2xl font-bold tracking-wide mb-4 text-teal-900/80 transition-opacity ${
+              className={`text-2xl font-bold tracking-wide mb-4 text-secondary/90 transition-opacity ${
                 showConfigLoading ? "opacity-80" : "opacity-100"
               }`}
             >
@@ -152,7 +158,7 @@ const Footer = () => {
               </svg>
               <a
                 href={phoneHref}
-                className="hover:text-green-500"
+                className="hover:text-primary"
               >
                 {config.phone || "Phone unavailable"}
               </a>
@@ -174,7 +180,7 @@ const Footer = () => {
               </svg>
               <a
                 href={emailHref}
-                className="hover:text-green-500"
+                className="hover:text-primary"
               >
                 {config.email || "Email unavailable"}
               </a>

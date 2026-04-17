@@ -22,7 +22,13 @@ export default function Title({
   };
 
   return (
-    <h2 className={clsx(sizeClasses[variant], "leading-tight text-black/80", className)}>
+    <h2
+      className={clsx(
+        sizeClasses[variant],
+        "leading-tight text-secondary/90",
+        className,
+      )}
+    >
       {children}
     </h2>
   );

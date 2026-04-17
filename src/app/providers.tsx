@@ -5,6 +5,7 @@ import { Provider } from "react-redux";
 import { Toaster } from "react-hot-toast";
 import useAuth from "@/hooks/useAuth";
 import StoreConfigBootstrap from "@/features/store/storeConfigBootstrap";
+import StoreThemeSync from "@/features/store/storeThemeSync";
 import { store } from "@/store";
 
 const AuthBootstrap = ({ children }: { children: ReactNode }) => {
@@ -18,6 +19,7 @@ export default function AppProviders({ children }: { children: ReactNode }) {
     <Provider store={store}>
       <AuthBootstrap>
         <StoreConfigBootstrap />
+        <StoreThemeSync />
         {children}
         <Toaster
           position="bottom-center"

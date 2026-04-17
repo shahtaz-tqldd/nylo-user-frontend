@@ -2,6 +2,7 @@ import React from "react";
 import { cn } from "@/lib/utils";
 import { ArrowRight } from "@/assets/algo-icons";
 import Link from "next/link";
+import type { CSSProperties } from "react";
 
 interface ButtonProps {
   children: React.ReactNode;
@@ -16,10 +17,9 @@ interface ButtonProps {
 }
 
 const variantClasses = {
-  primary: "bg-emerald-900 text-white group/button",
-  accent:
-    "border-2 border-primary/60 bg-primary/5 text-primary hover:bg-primary/10",
-  rubix: "bg-primary/10 hover:bg-primary/15 text-primary font-medium tr",
+  primary: "group/button hover:opacity-90",
+  accent: "border-2 font-medium",
+  rubix: "font-medium tr",
   alert: "bg-red-500/10 hover:bg-red-500/15 text-red-500 font-medium tr",
 };
 
@@ -28,6 +28,23 @@ const sizeClasses = {
   sm: "pl-10 pr-6 py-3 text-lg",
   md: "py-3 pr-5 pl-4",
   lg: "px-8 py-4 font-semibold",
+};
+
+const variantStyles: Record<ButtonProps["variant"], CSSProperties> = {
+  primary: {
+    backgroundColor: "var(--theme-primary)",
+    color: "var(--theme-primary-foreground)",
+  },
+  accent: {
+    color: "var(--theme-primary)",
+    backgroundColor: "color-mix(in srgb, var(--theme-primary) 6%, white)",
+    borderColor: "color-mix(in srgb, var(--theme-primary) 40%, white)",
+  },
+  rubix: {
+    color: "var(--theme-primary)",
+    backgroundColor: "color-mix(in srgb, var(--theme-primary) 10%, white)",
+  },
+  alert: {},
 };
 
 const Button: React.FC<ButtonProps> = ({
@@ -44,8 +61,10 @@ const Button: React.FC<ButtonProps> = ({
     "rounded-full inline-flex items-center justify-center overflow-hidden tr",
     variantClasses[variant],
     sizeClasses[size],
-    className
+    className,
   );
+
+  const commonStyle = variantStyles[variant];
 
   const textClasses = cn(
     variant === "primary" && isArrow
@@ -63,13 +82,13 @@ const Button: React.FC<ButtonProps> = ({
 
   if (link) {
     return (
-      <Link href={link} className={commonClasses}>
+      <Link href={link} className={commonClasses} style={commonStyle}>
         <span className={textClasses}>{children}</span>
         {variant === "primary" && isArrow && (
           <ArrowRight
             className={arrowClasses}
             size={size === "xs" ? 4 : 5}
-            color="#fff"
+            color="currentColor"
           />
         )}
       </Link>
@@ -77,13 +96,13 @@ const Button: React.FC<ButtonProps> = ({
   }
 
   return (
-    <button type={type} className={commonClasses} {...props}>
+    <button type={type} className={commonClasses} style={commonStyle} {...props}>
       <span className={textClasses}>{children}</span>
       {variant === "primary" && isArrow && (
         <ArrowRight
           className={arrowClasses}
           size={size === "xs" ? 4 : 5}
-          color="#fff"
+          color="currentColor"
         />
       )}
     </button>

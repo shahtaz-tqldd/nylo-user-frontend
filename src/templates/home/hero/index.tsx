@@ -13,7 +13,13 @@ import { Product } from "@/features/products/types";
 
 const Hero = ({ product }: { product: Product }) => {
   return (
-    <section className="relative w-full overflow-hidden bg-gradient-to-br from-[#DFF2EB] via-[#B9E5E8] to-[#DFF2EB]">
+    <section
+      className="relative w-full overflow-hidden"
+      style={{
+        background:
+          "linear-gradient(135deg, var(--theme-primary-soft), var(--theme-surface-strong), var(--theme-primary-muted))",
+      }}
+    >
       <div
         className="
           container mx-auto px-6
@@ -28,7 +34,7 @@ const Hero = ({ product }: { product: Product }) => {
         <div className="space-y-6 md:space-y-8 max-w-xl text-center md:text-left">
           <Title variant="xl">
             Unlace the Ordinary,{" "}
-            <span className="text-emerald-500">Lace Up the Hype.</span>
+            <span className="text-primary">Lace Up the Hype.</span>
           </Title>
 
           <p className="text-lg sm:text-xl text-gray-700 max-w-md mx-auto md:mx-0">

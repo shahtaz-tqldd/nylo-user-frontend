@@ -4,10 +4,26 @@
 
 @custom-variant dark (&:is(.dark *));
 
+:root {
+  --theme-primary: #a83838;
+  --theme-primary-foreground: #ffffff;
+  --theme-primary-soft: #f8ebeb;
+  --theme-primary-muted: #fcf5f5;
+  --theme-primary-deep: #802a2a;
+  --theme-accent: #140b0b;
+  --theme-accent-foreground: #ffffff;
+  --theme-accent-soft: #f2eeee;
+  --theme-accent-muted: #faf8f8;
+  --theme-surface: #fdf8f8;
+  --theme-surface-strong: #f3ebeb;
+}
+
 @theme {
-  --color-primary: #006045;
-  --color-secondary: #393e46;
-  --color-accent: #f3f3f3;
+  --color-primary: var(--theme-primary);
+  --color-primary-foreground: var(--theme-primary-foreground);
+  --color-secondary: var(--theme-accent);
+  --color-accent: var(--theme-accent-soft);
+  --color-accent-foreground: var(--theme-accent);
 }
 
 html,
@@ -16,6 +32,8 @@ body {
   margin: 0;
   padding: 0;
   font-family: "Space Grotesk", "Segoe UI", sans-serif;
+  background: var(--theme-surface);
+  color: var(--theme-accent);
 }
 
 /* Set box-sizing globally */
@@ -26,6 +44,11 @@ body {
 button,
 a {
   cursor: pointer;
+}
+
+::selection {
+  background: var(--theme-primary);
+  color: var(--theme-primary-foreground);
 }
 
 h3 {
@@ -44,4 +67,131 @@ h4 {
 p {
   color: var(--color-secondary);
   opacity: 0.8;
+}
+
+/* Runtime brand-color compatibility utilities */
+.text-primary {
+  color: var(--theme-primary) !important;
+}
+
+.text-primary\/50 {
+  color: color-mix(in srgb, var(--theme-primary) 50%, transparent) !important;
+}
+
+.text-secondary {
+  color: var(--theme-accent) !important;
+}
+
+.text-secondary\/90 {
+  color: color-mix(in srgb, var(--theme-accent) 90%, transparent) !important;
+}
+
+.text-primary-foreground {
+  color: var(--theme-primary-foreground) !important;
+}
+
+.text-accent {
+  color: var(--theme-accent) !important;
+}
+
+.text-accent-foreground {
+  color: var(--theme-accent-foreground) !important;
+}
+
+.bg-primary {
+  background-color: var(--theme-primary) !important;
+}
+
+.bg-primary\/5 {
+  background-color: color-mix(in srgb, var(--theme-primary) 5%, white) !important;
+}
+
+.bg-primary\/10 {
+  background-color: color-mix(in srgb, var(--theme-primary) 10%, white) !important;
+}
+
+.bg-primary\/15 {
+  background-color: color-mix(in srgb, var(--theme-primary) 15%, white) !important;
+}
+
+.bg-primary\/20 {
+  background-color: color-mix(in srgb, var(--theme-primary) 20%, white) !important;
+}
+
+.bg-primary\/30 {
+  background-color: color-mix(in srgb, var(--theme-primary) 30%, white) !important;
+}
+
+.bg-primary\/80 {
+  background-color: color-mix(in srgb, var(--theme-primary) 80%, transparent) !important;
+}
+
+.bg-accent {
+  background-color: var(--theme-accent-soft) !important;
+}
+
+.border-primary {
+  border-color: var(--theme-primary) !important;
+}
+
+.border-primary\/20 {
+  border-color: color-mix(in srgb, var(--theme-primary) 20%, white) !important;
+}
+
+.border-primary\/30 {
+  border-color: color-mix(in srgb, var(--theme-primary) 30%, white) !important;
+}
+
+.border-primary\/40 {
+  border-color: color-mix(in srgb, var(--theme-primary) 40%, white) !important;
+}
+
+.border-primary\/60 {
+  border-color: color-mix(in srgb, var(--theme-primary) 60%, white) !important;
+}
+
+.ring-primary {
+  --tw-ring-color: var(--theme-primary) !important;
+}
+
+.ring-primary\/10 {
+  --tw-ring-color: color-mix(in srgb, var(--theme-primary) 10%, white) !important;
+}
+
+.ring-primary\/20 {
+  --tw-ring-color: color-mix(in srgb, var(--theme-primary) 20%, white) !important;
+}
+
+.ring-primary\/40 {
+  --tw-ring-color: color-mix(in srgb, var(--theme-primary) 40%, white) !important;
+}
+
+.hover\:text-primary:hover {
+  color: var(--theme-primary) !important;
+}
+
+.hover\:bg-primary\/10:hover {
+  background-color: color-mix(in srgb, var(--theme-primary) 10%, white) !important;
+}
+
+.hover\:bg-primary\/30:hover {
+  background-color: color-mix(in srgb, var(--theme-primary) 30%, white) !important;
+}
+
+.focus\:border-primary:focus,
+.focus-visible\:border-primary:focus-visible {
+  border-color: var(--theme-primary) !important;
+}
+
+.focus\:ring-primary\/10:focus,
+.focus\:ring-primary\/20:focus,
+.focus\:ring-primary\/40:focus,
+.focus-visible\:ring-primary\/10:focus-visible,
+.focus-visible\:ring-primary\/20:focus-visible,
+.focus-visible\:ring-primary\/40:focus-visible {
+  --tw-ring-color: color-mix(in srgb, var(--theme-primary) 40%, white) !important;
+}
+
+.peer:focus ~ .peer-focus\:text-primary {
+  color: var(--theme-primary) !important;
 }

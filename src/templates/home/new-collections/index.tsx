@@ -22,7 +22,7 @@ const NewCollections = () => {
         {Boolean(left) && (
           <div className="space-y-10 md:space-y-16">
             <Title variant="xl">
-              See our <span className="text-emerald-500">brand new</span>{" "}
+              See our <span className="text-primary">brand new</span>{" "}
               collections
             </Title>
 
