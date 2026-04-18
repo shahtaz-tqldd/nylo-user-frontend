@@ -238,7 +238,7 @@ const FilterChip = ({
 }) => {
   const colorClasses =
     color === "green"
-      ? "border-green-100 bg-green-50 text-green-800"
+      ? "border-primary/10 bg-primary/10 text-primary"
       : "border-gray-100 bg-gray-50 text-primary";
 
   return (

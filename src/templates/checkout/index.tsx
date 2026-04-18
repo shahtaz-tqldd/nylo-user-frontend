@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import type { FetchBaseQueryError } from "@reduxjs/toolkit/query";
 import {
   ShoppingCart,
   Lock,
@@ -18,7 +19,11 @@ import { useCartItemListQuery } from "@/features/products/productApiSlice";
 import { useAppSelector } from "@/hooks/redux";
 import { openAuthDialog } from "@/features/auth/authSlice";
 import { useDispatch } from "react-redux";
-import { useCreateStripeCheckoutSessionMutation } from "@/features/orders/orderApiSlice";
+import {
+  useApplyCouponMutation,
+  useCreateStripeCheckoutSessionMutation,
+} from "@/features/orders/orderApiSlice";
+import type { ApplyCouponResponse } from "@/features/orders/types";
 
 interface ShippingInfo {
   firstName: string;
@@ -39,6 +44,32 @@ const DEFAULT_COUNTRY = "United States";
 
 const getStringValue = (value: unknown) =>
   typeof value === "string" ? value : "";
+
+const getErrorMessage = (error: unknown, fallback: string) => {
+  if (error && typeof error === "object") {
+    const fetchError = error as FetchBaseQueryError & {
+      data?: { message?: string; error?: string };
+    };
+    if (
+      fetchError.data &&
+      typeof fetchError.data === "object" &&
+      fetchError.data !== null
+    ) {
+      const message =
+        fetchError.data.message ??
+        fetchError.data.error;
+      if (typeof message === "string" && message.trim()) {
+        return message;
+      }
+    }
+  }
+
+  if (error instanceof Error && error.message.trim()) {
+    return error.message;
+  }
+
+  return fallback;
+};
 
 const CheckoutPage: React.FC = () => {
   const router = useRouter();
@@ -61,12 +92,20 @@ const CheckoutPage: React.FC = () => {
   });
   const [paymentMethod, setPaymentMethod] = useState("card");
   const [promoCode, setPromoCode] = useState("");
-  const [promoApplied, setPromoApplied] = useState(false);
+  const [appliedCoupon, setAppliedCoupon] = useState<ApplyCouponResponse | null>(
+    null,
+  );
+  const [couponError, setCouponError] = useState<string | null>(null);
+  const [couponSuccessMessage, setCouponSuccessMessage] = useState<string | null>(
+    null,
+  );
   const [shippingTouched, setShippingTouched] = useState<
     Partial<Record<ShippingField, boolean>>
   >({});
   const [showShippingErrors, setShowShippingErrors] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
+  const [applyCoupon, { isLoading: isApplyingCoupon }] =
+    useApplyCouponMutation();
   const [createStripeCheckoutSession, { isLoading: isCreatingStripeCheckout }] =
     useCreateStripeCheckoutSessionMutation();
 
@@ -115,8 +154,9 @@ const CheckoutPage: React.FC = () => {
     0,
   );
   const shipping = 15.99;
-  const discount = promoApplied ? subtotal * 0.1 : 0;
-  const total = subtotal + shipping - discount;
+  const couponSubtotal = Number(appliedCoupon?.subtotal ?? subtotal);
+  const discount = Number(appliedCoupon?.discount_amount ?? 0);
+  const total = Number(appliedCoupon?.total_amount ?? subtotal) + shipping;
 
   const handleInputChange = (field: keyof ShippingInfo, value: string) => {
     setShippingInfo((prev) => ({ ...prev, [field]: value }));
@@ -126,9 +166,26 @@ const CheckoutPage: React.FC = () => {
     setShippingTouched((prev) => ({ ...prev, [field]: true }));
   };
 
-  const handlePromoApply = () => {
-    if (promoCode.toLowerCase() === "save10") {
-      setPromoApplied(true);
+  const handlePromoApply = async () => {
+    const code = promoCode.trim();
+
+    setCouponError(null);
+    setCouponSuccessMessage(null);
+    setCheckoutError(null);
+
+    if (!code) {
+      setAppliedCoupon(null);
+      setCouponError("Enter a coupon code.");
+      return;
+    }
+
+    try {
+      const response = await applyCoupon({ code }).unwrap();
+      setAppliedCoupon(response.data);
+      setCouponSuccessMessage(`Coupon ${response.data.coupon.code} applied.`);
+    } catch (error) {
+      setAppliedCoupon(null);
+      setCouponError(getErrorMessage(error, "Unable to apply coupon."));
     }
   };
 
@@ -244,7 +301,7 @@ const CheckoutPage: React.FC = () => {
         },
         success_url: `${origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${origin}/checkout/cancel`,
-        promo_code: promoCode.trim() || undefined,
+        coupon_code: appliedCoupon?.coupon.code ?? undefined,
       }).unwrap();
 
       const checkoutUrl =
@@ -705,7 +762,14 @@ const CheckoutPage: React.FC = () => {
                   <div className="w-full">
                     <Input
                       value={promoCode}
-                      onChange={(e) => setPromoCode(e.target.value)}
+                      onChange={(e) => {
+                        setPromoCode(e.target.value);
+                        setCouponError(null);
+                        setCouponSuccessMessage(null);
+                        setAppliedCoupon((prev) =>
+                          prev?.coupon.code === e.target.value.trim() ? prev : null,
+                        );
+                      }}
                       placeholder="Promo code"
                       className="max-w-full"
                       icon={<Gift className="w-5 h-5" />}
@@ -714,36 +778,46 @@ const CheckoutPage: React.FC = () => {
 
                   <button
                     onClick={handlePromoApply}
+                    disabled={isApplyingCoupon}
                     className="px-5 py-2 bg-primary hover:bg-black text-white text-sm rounded-lg tr"
                   >
-                    Apply
+                    {isApplyingCoupon ? "Applying..." : "Apply"}
                   </button>
                 </div>
-                {promoApplied && (
+                {couponSuccessMessage ? (
                   <div className="mt-2 flex items-center space-x-2 text-sm text-green-600 px-1">
-                    <span>10% discount applied!</span>
+                    <span>{couponSuccessMessage}</span>
                   </div>
-                )}
+                ) : null}
+                {couponError ? (
+                  <div className="mt-2 flex items-center space-x-2 text-sm text-red-500 px-1">
+                    <span>{couponError}</span>
+                  </div>
+                ) : null}
               </div>
 
               {/* Order Totals */}
               <div className="border-t border-gray-200 pt-4 space-y-3">
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Subtotal</span>
-                  <span className="text-gray-900">{formatPrice(subtotal)}</span>
+                  <span className="text-gray-900">
+                    {formatPrice(couponSubtotal)}
+                  </span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Shipping</span>
                   <span className="text-gray-900">{formatPrice(shipping)}</span>
                 </div>
-                {promoApplied && (
+                {appliedCoupon ? (
                   <div className="flex justify-between text-sm">
-                    <span className="text-green-600">Discount (10%)</span>
+                    <span className="text-green-600">
+                      Discount ({appliedCoupon.coupon.code})
+                    </span>
                     <span className="text-green-600">
                       -{formatPrice(discount)}
                     </span>
                   </div>
-                )}
+                ) : null}
                 <div className="border-t border-gray-200 pt-3 flex justify-between font-semibold text-lg">
                   <span className="text-gray-900">Total</span>
                   <span className="text-gray-900">{formatPrice(total)}</span>

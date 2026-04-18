@@ -15,7 +15,7 @@ export interface CreateStripeCheckoutSessionPayload {
   shipping_address: ShippingAddressPayload;
   success_url: string;
   cancel_url: string;
-  promo_code?: string;
+  coupon_code?: string;
 }
 
 export interface CreateStripeCheckoutSessionResponse {
@@ -25,6 +25,26 @@ export interface CreateStripeCheckoutSessionResponse {
   checkoutUrl?: string;
   order_id?: string;
   orderId?: string;
+}
+
+export interface CouponDetails {
+  id: string;
+  code: string;
+  coupon_type: string;
+  value: string;
+  minimum_order_amount: string;
+  maximum_discount_amount: string | null;
+}
+
+export interface ApplyCouponPayload {
+  code: string;
+}
+
+export interface ApplyCouponResponse {
+  coupon: CouponDetails;
+  subtotal: string;
+  discount_amount: string;
+  total_amount: string;
 }
 
 export interface OrderShippingAddress {
@@ -64,6 +84,7 @@ export interface OrderItem {
   tax_amount: string;
   total_amount: string;
   promo_code: string | null;
+  coupon_code?: string | null;
   shipping_address: OrderShippingAddress;
   stripe_checkout_session_id: string | null;
   stripe_payment_intent_id: string | null;

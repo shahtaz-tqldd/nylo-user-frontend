@@ -1,17 +1,22 @@
+import { CheckIcon } from "@/assets/algo-icons";
 import Layout from "@/layouts/main";
 import Link from "next/link";
 
 export default function CheckoutSuccessPage() {
   return (
     <Layout>
-      <section className="container pt-32 pb-20">
-        <div className="mx-auto max-w-2xl rounded-2xl border border-green-200 bg-green-50 p-8 text-center">
+      <section className="container py-32">
+        <div className="mx-auto max-w-2xl p-8 text-center">
+          <div className="bg-green-600 h-12 w-12 rounded-full center pt-1 mx-auto mb-4">
+            <CheckIcon size={10} />
+          </div>
           <h1 className="text-3xl font-semibold text-green-900">
             Payment completed
           </h1>
           <p className="mt-3 text-sm text-green-800">
-            Stripe sent you back successfully. Your backend should now confirm
-            the payment through a webhook and mark the order as paid.
+            Your payment was successful! Thank you for your purchase. You can
+            view your order details in your profile or continue shopping for
+            more great products.
           </p>
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Link

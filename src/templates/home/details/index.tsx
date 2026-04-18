@@ -3,18 +3,59 @@
 import Image from "next/image";
 import React from "react";
 
-import { DETAILS_DATA } from "./demo-data";
 import Title from "@/components/ui/title";
+import { useAboutPageContentQuery } from "@/features/store/storeApiSlice";
 
 const Details = () => {
-  const detailsData = DETAILS_DATA;
+  const { data } = useAboutPageContentQuery({});
+
+  const detailsData = [
+    {
+      img: data?.data?.detail_1_image || "/sdet1.webp",
+      text:
+        data?.data?.detail_1_title ||
+        "Padded heel engineered for all terrain comfort and unmatched ankle support.",
+      bg: "bg-teal-50",
+      textPosition: "bottom",
+      imageWidth: "78%",
+      bgColorRGB: "20, 184, 166",
+      color: "teal",
+      number: "01",
+    },
+
+    {
+      img: data?.data?.detail_2_image || "/sdet2.png",
+      text:
+        data?.data?.detail_2_title ||
+        "The outsole pattern is inspired by metamorphosis to adapt with your every step.",
+      bg: "bg-cyan-50",
+      textPosition: "top",
+      imageWidth: "90%",
+      bgColorRGB: "6, 182, 212",
+      color: "cyan",
+      number: "02",
+    },
+    {
+      img: data?.data?.detail_3_image || "/sdet3.png",
+      text:
+        data?.data?.detail_3_title ||
+        "Engineered cushioning that hugs your feet all day, reducing fatigue with every step.",
+      bg: "bg-rose-50",
+      textPosition: "side",
+      imageWidth: "60%",
+      bgColorRGB: "244, 114, 182",
+      color: "pink",
+      number: "03",
+    },
+  ];
+
   return (
     <section className="py-24">
       <p className="uppercase tracking-[2px] text-lg text-center">
         Why choose us
       </p>
       <Title className="mt-2 text-center">
-        Details Down to <span className="text-primary">Sneaker Level</span>
+        {data?.data?.details_section_title || "Details Down to Sneaker Level"}
       </Title>
 
       <div className="container grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 relative z-10 mt-12">
@@ -42,9 +83,7 @@ const Details = () => {
               alt="shoe"
               height={400}
               width={400}
-              className={`z-10 ${
-               "mx-auto pt-4" 
-              }`}
+              className={`z-10 ${"mx-auto pt-4"}`}
               style={{ width: item.imageWidth }}
             />
 

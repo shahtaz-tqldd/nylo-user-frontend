@@ -1,6 +1,8 @@
 import { apiSlice } from "../api/apiSlice";
 import type { ApiResponse } from "../api/types";
 import type {
+  ApplyCouponPayload,
+  ApplyCouponResponse,
   CreateStripeCheckoutSessionPayload,
   CreateStripeCheckoutSessionResponse,
   OrderItem,
@@ -34,11 +36,20 @@ export const orderApiSlice = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ["orders"],
     }),
+
+    applyCoupon: builder.mutation<ApiResponse<ApplyCouponResponse>, ApplyCouponPayload>({
+      query: (payload) => ({
+        url: "/coupons/apply/",
+        method: "POST",
+        body: payload,
+      }),
+    }),
   }),
 });
 
 export const {
-  useCreateStripeCheckoutSessionMutation,
   useOrderListQuery,
-  useUpdateOrderMutation
+  useUpdateOrderMutation,
+  useApplyCouponMutation,
+  useCreateStripeCheckoutSessionMutation,
 } = orderApiSlice;
