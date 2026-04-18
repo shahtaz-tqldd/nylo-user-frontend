@@ -3,7 +3,8 @@ import type { ApiResponse } from "../api/types";
 import type {
   CreateStripeCheckoutSessionPayload,
   CreateStripeCheckoutSessionResponse,
-  OrderItem
+  OrderItem,
+  UpdateOrderPayload
 } from "./types";
 
 export const orderApiSlice = apiSlice.injectEndpoints({
@@ -24,10 +25,20 @@ export const orderApiSlice = apiSlice.injectEndpoints({
       }),
       providesTags: ["orders"],
     }),
+
+    updateOrder: builder.mutation<ApiResponse<OrderItem>, UpdateOrderPayload>({
+      query: (payload) => ({
+        url: "/orders/update/",
+        method: "PATCH",
+        body: payload,
+      }),
+      invalidatesTags: ["orders"],
+    }),
   }),
 });
 
 export const {
   useCreateStripeCheckoutSessionMutation,
-  useOrderListQuery
+  useOrderListQuery,
+  useUpdateOrderMutation
 } = orderApiSlice;

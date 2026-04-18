@@ -34,3 +34,17 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## TODO
+- homepage: details from apis
+- shop: active filter bg color
+- about: reviews are currently static
+- contact: connect form
+- google sign in/ sign up complete
+- notification
+- favourite item bug, remove favourite from product card
+- chat interface open with redux states
+- socket and chat connection:
+  - options for agent and customer support
+  - auto suggested message
+  - message limit apply

@@ -19,7 +19,6 @@ import { useAppSelector } from "@/hooks/redux";
 import { openAuthDialog } from "@/features/auth/authSlice";
 import { useDispatch } from "react-redux";
 import { useCreateStripeCheckoutSessionMutation } from "@/features/orders/orderApiSlice";
-import { getStripe } from "@/lib/stripe";
 
 interface ShippingInfo {
   firstName: string;
@@ -248,7 +247,6 @@ const CheckoutPage: React.FC = () => {
         promo_code: promoCode.trim() || undefined,
       }).unwrap();
 
-      const sessionId = response.data.session_id ?? response.data.sessionId;
       const checkoutUrl =
         response.data.checkout_url ?? response.data.checkoutUrl;
 
@@ -257,23 +255,7 @@ const CheckoutPage: React.FC = () => {
         return;
       }
 
-      if (!sessionId) {
-        throw new Error("Stripe session was missing from the API response.");
-      }
-
-      const stripe = await getStripe();
-
-      if (!stripe) {
-        throw new Error("Stripe failed to initialize.");
-      }
-
-      const redirectResult = await stripe.redirectToCheckout({ sessionId });
-
-      if (redirectResult.error) {
-        throw new Error(
-          redirectResult.error.message ?? "Redirecting to Stripe failed.",
-        );
-      }
+      throw new Error("Stripe checkout URL was missing from the API response.");
     } catch (error) {
       console.error("Creating Stripe checkout session failed:", error);
       setCheckoutError(

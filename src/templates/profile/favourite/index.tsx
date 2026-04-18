@@ -28,9 +28,11 @@ const FavouritePage = () => {
         </div>
       )}
       <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-x-5 gap-y-10 mt-8">
-        {data?.data?.map((product, index) => (
-          <ProductCard product={product?.product} key={index} size="sm" />
-        ))}
+        {data?.data?.map((product, index) =>
+          product?.product ? (
+            <ProductCard product={product.product} key={index} size="sm" />
+          ) : null,
+        )}
       </section>
     </MyProfileLayout>
   );

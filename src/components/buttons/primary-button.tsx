@@ -30,7 +30,7 @@ const sizeClasses = {
   lg: "px-8 py-4 font-semibold",
 };
 
-const variantStyles: Record<ButtonProps["variant"], CSSProperties> = {
+const variantStyles: Record<NonNullable<ButtonProps["variant"]>, CSSProperties> = {
   primary: {
     backgroundColor: "var(--theme-primary)",
     color: "var(--theme-primary-foreground)",

@@ -16,7 +16,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal, ChevronsUpDown, SearchIcon } from "lucide-react";
-import Button from "../buttons/primary-button";
 import Pagination from "../pagination";
 import { cn } from "@/lib/utils";
 
@@ -42,6 +41,7 @@ export type DataTableProps<T> = {
   emptyState?: React.ReactNode;
   isShowCheckbox?: boolean;
   isShowActions?: boolean;
+  renderRowActions?: (row: T) => React.ReactNode;
   className?: string;
 };
 
@@ -64,6 +64,7 @@ export default function DataTable<T extends object>({
   emptyState,
   isShowCheckbox = false,
   isShowActions = false,
+  renderRowActions,
   className = "",
 }: DataTableProps<T>) {
   const [query, setQuery] = useState("");
@@ -241,7 +242,7 @@ export default function DataTable<T extends object>({
                 </TableCell>
               </TableRow>
             ) : (
-              current.map((row, idx) => {
+              current.map((row) => {
                 const rowId = getRowId(row);
                 return (
                   <TableRow key={String(rowId)} className="hover:bg-muted/50">
@@ -279,28 +280,33 @@ export default function DataTable<T extends object>({
                             <MoreHorizontal />
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            {/* Example default actions; consumer can ignore and render their own via renderRowActions */}
-                            <DropdownMenuItem
-                              onSelect={() =>
-                                console.log("Action: view", rowId)
-                              }
-                            >
-                              View
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onSelect={() =>
-                                console.log("Action: edit", rowId)
-                              }
-                            >
-                              Edit
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onSelect={() =>
-                                console.log("Action: delete", rowId)
-                              }
-                            >
-                              Delete
-                            </DropdownMenuItem>
+                            {renderRowActions ? (
+                              renderRowActions(row)
+                            ) : (
+                              <>
+                                <DropdownMenuItem
+                                  onSelect={() =>
+                                    console.log("Action: view", rowId)
+                                  }
+                                >
+                                  View
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onSelect={() =>
+                                    console.log("Action: edit", rowId)
+                                  }
+                                >
+                                  Edit
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onSelect={() =>
+                                    console.log("Action: delete", rowId)
+                                  }
+                                >
+                                  Delete
+                                </DropdownMenuItem>
+                              </>
+                            )}
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>

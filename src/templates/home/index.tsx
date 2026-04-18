@@ -18,10 +18,11 @@ const Homepage = () => {
 
   const bestSellingProducts = data?.data?.best_selling_products || [];
   const offerItems = data?.data?.offer_items || [];
+  const signatureProduct = data?.data?.signature_items[0]?.product;
 
   return (
     <React.Fragment>
-      <Hero product={data?.data?.signature_items[0]?.product} />
+      {signatureProduct && <Hero product={signatureProduct} />}
       <NewArrivals />
       <NewCollections />
       {bestSellingProducts.length > 0 && (
