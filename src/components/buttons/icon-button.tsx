@@ -11,7 +11,7 @@ export default function IconButton({
   icon: Icon,
   onClick,
   size = 6,
-  color = "bg-primary/10",
+  color = "bg-primary/15",
 }: IconButtonProps) {
   return (
     <button

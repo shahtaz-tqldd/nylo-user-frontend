@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
 import {
   Heart,
@@ -29,6 +29,7 @@ import {
 } from "@/features/products/productApiSlice";
 import {
   ProductColor,
+  ProductBrand,
   ProductVariant,
   ProductVariantSize,
 } from "@/features/products/types";
@@ -42,6 +43,14 @@ interface GalleryItem {
   variant?: ProductVariant;
   label: string;
 }
+
+const getBrandName = (brand?: string | ProductBrand) => {
+  if (!brand) {
+    return "";
+  }
+
+  return typeof brand === "string" ? brand : brand.name;
+};
 
 interface ImageGalleryProps {
   items: GalleryItem[];
@@ -557,12 +566,14 @@ const ProductDetailsSkeleton = () => {
 
 const ProductDetailsPage = ({ productSlug }: { productSlug: string }) => {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { isAuthenticated } = useAppSelector((state) => state.auth);
   const { data, isLoading, isError } = useProductDetailsQuery(productSlug);
   const [addToCart, { isLoading: isCartUpdating }] = useAddToCartMutation();
   const [addToFavourite, { isLoading: isFavouriteUpdating }] =
     useAddToFavouriteMutation();
   const product = data?.data;
+  const requestedVariantId = searchParams.get("variant");
 
   const variants = product?.variants ?? [];
   const colors = variants.reduce<ProductColor[]>((uniqueColors, variant) => {
@@ -595,14 +606,23 @@ const ProductDetailsPage = ({ productSlug }: { productSlug: string }) => {
       return;
     }
 
-    const firstVariant = product.variants?.find((variant) => variant.is_active);
+    const requestedVariant = requestedVariantId
+      ? product.variants?.find(
+          (variant) => variant.is_active && variant.id === requestedVariantId,
+        )
+      : null;
+    const firstVariant =
+      requestedVariant ??
+      product.variants?.find((variant) => variant.is_active) ??
+      product.variants?.[0];
+
     setSelectedColorId(
-      firstVariant?.color.id ?? product.variants?.[0]?.color.id ?? null,
+      firstVariant?.color.id ?? null,
     );
     setSelectedSizeId(
-      firstVariant?.size.id ?? product.variants?.[0]?.size.id ?? null,
+      firstVariant?.size.id ?? null,
     );
-  }, [product]);
+  }, [product, requestedVariantId]);
 
   useEffect(() => {
     setIsFavourite(Boolean(product?.added_to_favourite));
@@ -897,7 +917,7 @@ const ProductDetailsPage = ({ productSlug }: { productSlug: string }) => {
         <div className="space-y-6">
           <div className="space-y-3 md:hidden">
             <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600">
-              <span className="font-medium">{product.brand}</span>
+              <span className="font-medium">{getBrandName(product.brand)}</span>
               {product.category?.name && (
                 <>
                   <span>•</span>
@@ -929,7 +949,7 @@ const ProductDetailsPage = ({ productSlug }: { productSlug: string }) => {
         <div className="space-y-6">
           <div className="hidden space-y-3 md:block">
             <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600">
-              <span className="font-medium">{product.brand}</span>
+              <span className="font-medium">{getBrandName(product.brand)}</span>
               {product.category?.name && (
                 <>
                   <span>•</span>

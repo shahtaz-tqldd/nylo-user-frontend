@@ -1,5 +1,6 @@
 export interface Product {
   id?: string | number;
+  product_id?: string | number;
   title?: string;
   name?: string;
   description?: string;
@@ -11,11 +12,12 @@ export interface Product {
   discount?: string;
   discountPrice?: string;
   category_name?: string;
-  brand?: string;
+  brand?: string | ProductBrand;
   gender?: string;
   in_stock?: boolean;
   total_stock?: number;
   variants_count?: number;
+  variant_options?: ProductListVariantOption[];
   sku?: string;
   features?: string[];
   specifications?: Record<string, string>;
@@ -54,6 +56,12 @@ export interface ProductCategory {
   slug: string;
 }
 
+export interface ProductBrand {
+  id: string;
+  name: string;
+  slug: string;
+}
+
 export interface ProductSize {
   id: string;
   name: string;
@@ -84,6 +92,16 @@ export interface ProductVariant {
   updated_at: string;
   added_to_cart?: boolean;
   cart_quantity?: number;
+}
+
+export interface ProductListVariantOption {
+  id: string;
+  size_name: string;
+  color_name: string;
+  color_code: string;
+  added_to_cart?: boolean;
+  cart_quantity?: number;
+  image_url?: string | null;
 }
 
 export interface ProductGender {

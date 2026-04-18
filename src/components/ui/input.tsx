@@ -107,7 +107,7 @@ function FloatingInput({
             ${
               error
                 ? "border-red-500 focus:border-red-500 focus:ring-4 focus:ring-red-100"
-                : "border-slate-300 focus:border-primary focus:ring-4 focus:ring-primary/10"
+                : "border-slate-300 focus:border-primary focus:ring-4 focus:ring-primary/5"
             }
             ${isPassword ? "pr-12" : ""}
           `}

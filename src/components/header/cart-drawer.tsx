@@ -17,7 +17,7 @@ import {
   useCartItemListQuery,
 } from "@/features/products/productApiSlice";
 import { useAppSelector } from "@/hooks/redux";
-import { CartItem } from "@/features/products/types";
+import { CartItem, ProductBrand } from "@/features/products/types";
 import { DialogTrigger } from "../ui/dialog";
 import { Cart } from "@/assets/algo-icons";
 import IconButton from "../buttons/icon-button";
@@ -33,6 +33,14 @@ const getCartItemImage = (item: CartItem) =>
 const formatPrice = (value?: string | number) => {
   const parsed = Number(value ?? 0);
   return `$${parsed.toFixed(2)}`;
+};
+
+const getBrandName = (brand?: string | ProductBrand) => {
+  if (!brand) {
+    return "Brand";
+  }
+
+  return typeof brand === "string" ? brand : brand.name;
 };
 
 export default function CartDrawer() {
@@ -125,7 +133,7 @@ export default function CartDrawer() {
                   />
                   <div className="min-w-0">
                     <p className="w-fit text-xs font-semibold text-primary">
-                      {item.product?.brand ?? "Brand"}
+                      {getBrandName(item.product?.brand)}
                     </p>
                     <h5 className="truncate font-medium">
                       {item.product?.title ?? "Product"}
