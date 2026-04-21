@@ -32,6 +32,14 @@ export const storeApiSlice = apiSlice.injectEndpoints({
       }),
     }),
 
+    sendEmail: builder.mutation({
+      query: (payload) => ({
+        url: `/shop/send-email/`,
+        method: "POST",
+        body: payload
+      }),
+    }),
+
   }),
 });
 
@@ -39,5 +47,6 @@ export const {
   useStoreConfigQuery,
   useAboutPageContentQuery,
   useLegalContentQuery,
-  useFaqListQuery
+  useFaqListQuery,
+  useSendEmailMutation
 } = storeApiSlice;
